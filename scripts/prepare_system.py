@@ -82,8 +82,8 @@ def prepare_system(system_dir: str):
 
     root_env = parse_env_file(root / "docker" / ".env")
 
-    # Discover components and their .env files (under system src/)
-    components_dir = system_path / "src"
+    # Discover components and their .env files (system components/ or src/)
+    components_dir = system_path / "components" if (system_path / "components").is_dir() else system_path / "src"
     component_envs = {}
     if components_dir.is_dir():
         for comp_dir in sorted(components_dir.iterdir()):

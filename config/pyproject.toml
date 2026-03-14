@@ -6,6 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 
 [tool.pytest.ini_options]
-pythonpath = [".."]
+pythonpath = ["..", "../agrodron"]
 testpaths = ["../tests", "../dummy_component", "../dummy_system"]
 addopts = "-v"

@@ -10,16 +10,16 @@
 
 **Где лежат:** в каждом компоненте в папке `tests/`:
 
-- `src/autopilot/tests/` — автопилот (mission_load, cmd, get_state)
-- `src/emergensy/tests/` — экстренные ситуации (limiter_event)
-- `src/journal/tests/` — журнал (LOG_EVENT → файл)
-- `src/limiter/tests/` — ограничитель (mission_load, nav_state, get_state)
-- `src/mission_handler/tests/` — парсер WPL и загрузка миссии
-- `src/navigation/tests/` — нормализатор SITL и компонент навигации
-- `src/motors/tests/` — приводы (SET_TARGET, LAND, get_state, формат SITL-команды)
-- `src/sprayer/tests/` — опрыскиватель (SET_SPRAY, get_state)
-- `src/security_monitor/tests/` — монитор (proxy_publish, proxy_request, политики)
-- `src/telemetry/tests/` — телеметрия (get_state, proxy_get_state)
+- `components/autopilot/tests/` — автопилот (mission_load, cmd, get_state)
+- `components/emergensy/tests/` — экстренные ситуации (limiter_event)
+- `components/journal/tests/` — журнал (LOG_EVENT → файл)
+- `components/limiter/tests/` — ограничитель (mission_load, nav_state, get_state)
+- `components/mission_handler/tests/` — парсер WPL и загрузка миссии
+- `components/navigation/tests/` — нормализатор SITL и компонент навигации
+- `components/motors/tests/` — приводы (SET_TARGET, LAND, get_state, формат SITL-команды)
+- `components/sprayer/tests/` — опрыскиватель (SET_SPRAY, get_state)
+- `components/security_monitor/tests/` — монитор (proxy_publish, proxy_request, политики)
+- `components/telemetry/tests/` — телеметрия (get_state, proxy_get_state)
 
 **Запуск всех unit-тестов из каталога `agrodron`:**
 
@@ -31,13 +31,13 @@ make unit-test
 Или вручную (из корня репозитория):
 
 ```bash
-PIPENV_PIPFILE=config/Pipfile pipenv run pytest -c config/pyproject.toml agrodron/src -v
+PIPENV_PIPFILE=config/Pipfile pipenv run pytest -c config/pyproject.toml agrodron/components -v
 ```
 
 Запуск тестов только одного компонента, например motors:
 
 ```bash
-PIPENV_PIPFILE=config/Pipfile pipenv run pytest -c config/pyproject.toml agrodron/src/motors/tests -v
+PIPENV_PIPFILE=config/Pipfile pipenv run pytest -c config/pyproject.toml agrodron/components/motors/tests -v
 ```
 
 ---
@@ -102,7 +102,7 @@ make tests
 
 ```
 agrodron/
-├── src/
+├── components/
 │   ├── autopilot/tests/    # unit
 │   ├── emergensy/tests/    # unit
 │   ├── journal/tests/      # unit
@@ -119,4 +119,4 @@ agrodron/
     └── README_TESTS.md     # этот файл
 ```
 
-Итого: **unit** — быстрые, без Docker, в `src/*/tests/`; **integration** — с брокером и опционально с контейнерами, в `agrodron/tests/`.
+Итого: **unit** — быстрые, без Docker, в `components/*/tests/`; **integration** — с брокером и опционально с контейнерами, в `agrodron/tests/`.

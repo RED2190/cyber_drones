@@ -20,7 +20,7 @@ cd ..
 
 ## 1. Поднять систему (Docker)
 
-Все компоненты уже имеют рабочие `.env` в `agrodron/src/<component>/.env` с топиками `agrodron.*`. Генератор собирает из них общий `.generated/.env` и единый `docker-compose`.
+Все компоненты уже имеют рабочие `.env` в `agrodron/components/<component>/.env` с топиками `agrodron.*`. Генератор собирает из них общий `.generated/.env` и единый `docker-compose`.
 
 ### 1.1. Выбор брокера
 
@@ -40,7 +40,7 @@ make docker-up
 
 Эта команда:
 
-1. Выполняет **prepare** — скрипт `scripts/prepare_system.py agrodron` читает `.env` из каждого компонента в `agrodron/src/`, собирает общий `agrodron/.generated/docker-compose.yml` и `agrodron/.generated/.env`.
+1. Выполняет **prepare** — скрипт `scripts/prepare_system.py agrodron` читает `.env` из каждого компонента в `agrodron/components/`, собирает общий `agrodron/.generated/docker-compose.yml` и `agrodron/.generated/.env`.
 2. Поднимает брокер (Kafka или Mosquitto) и все сервисы системы с профилем `kafka` или `mqtt`.
 
 Эквивалент вручную (без make):
@@ -106,7 +106,7 @@ make check-tools
 
 ### 2.2. Unit-тесты (без Docker)
 
-Тесты компонентов лежат в `agrodron/src/*/tests/`.
+Тесты компонентов лежат в `agrodron/components/*/tests/`.
 
 ```bash
 cd agrodron
@@ -117,17 +117,17 @@ make unit-test
 
 ```bash
 cd agrodron
-PIPENV_PIPFILE=../config/Pipfile pipenv run pytest -c ../config/pyproject.toml src -vv -rA -s
+PIPENV_PIPFILE=../config/Pipfile pipenv run pytest -c ../config/pyproject.toml components -vv -rA -s
 ```
 
 Будут выполнены, в том числе:
 
-- `src/autopilot/tests/`
-- `src/emergensy/tests/`
-- `src/journal/tests/`
-- `src/limiter/tests/`
-- `src/mission_handler/tests/`
-- `src/navigation/tests/`
+- `components/autopilot/tests/`
+- `components/emergensy/tests/`
+- `components/journal/tests/`
+- `components/limiter/tests/`
+- `components/mission_handler/tests/`
+- `components/navigation/tests/`
 
 ### 2.3. Интеграционные тесты (с Docker)
 
@@ -202,7 +202,7 @@ make run-all
 ## 5. Переменные окружения при запуске
 
 - **BROKER_TYPE** — `kafka` или `mqtt` (учитывается при `make docker-up` и `make docker-logs`).
-- Конфигурация компонентов берётся из их `.env` в `agrodron/src/<component>/.env` при каждом `make prepare`; итог попадает в `agrodron/.generated/.env`.
+- Конфигурация компонентов берётся из их `.env` в `agrodron/components/<component>/.env` при каждом `make prepare`; итог попадает в `agrodron/.generated/.env`.
 
 Если вы меняли только `.env` компонентов, достаточно снова выполнить:
 

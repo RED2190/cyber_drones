@@ -103,7 +103,7 @@ services:
   security_monitor:
     build:
       context: ../..
-      dockerfile: agrodron/src/security_monitor/docker/Dockerfile
+      dockerfile: agrodron/components/security_monitor/docker/Dockerfile
     profiles:
     - kafka
     - mqtt
@@ -134,7 +134,7 @@ services:
   journal:
     build:
       context: ../..
-      dockerfile: agrodron/src/journal/docker/Dockerfile
+      dockerfile: agrodron/components/journal/docker/Dockerfile
     profiles:
     - kafka
     - mqtt
@@ -165,7 +165,7 @@ services:
   navigation:
     build:
       context: ../..
-      dockerfile: agrodron/src/navigation/docker/Dockerfile
+      dockerfile: agrodron/components/navigation/docker/Dockerfile
     profiles:
     - kafka
     - mqtt
@@ -199,7 +199,7 @@ services:
   autopilot:
     build:
       context: ../..
-      dockerfile: agrodron/src/autopilot/docker/Dockerfile
+      dockerfile: agrodron/components/autopilot/docker/Dockerfile
     profiles:
     - kafka
     - mqtt
@@ -233,7 +233,7 @@ services:
   limiter:
     build:
       context: ../..
-      dockerfile: agrodron/src/limiter/docker/Dockerfile
+      dockerfile: agrodron/components/limiter/docker/Dockerfile
     profiles:
     - kafka
     - mqtt
@@ -271,7 +271,7 @@ services:
   emergensy:
     build:
       context: ../..
-      dockerfile: agrodron/src/emergensy/docker/Dockerfile
+      dockerfile: agrodron/components/emergensy/docker/Dockerfile
     profiles:
     - kafka
     - mqtt
@@ -301,7 +301,7 @@ services:
   mission_handler:
     build:
       context: ../..
-      dockerfile: agrodron/src/mission_handler/docker/Dockerfile
+      dockerfile: agrodron/components/mission_handler/docker/Dockerfile
     profiles:
     - kafka
     - mqtt

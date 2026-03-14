@@ -42,7 +42,7 @@ docker-logs:
 		$(DOCKER_COMPOSE) --profile $${BROKER_TYPE:-kafka} logs -f
 
 unit-test: check-tools
-	@PIPENV_PIPFILE=$(PIPENV_PIPFILE) pipenv run pytest -c $(PYTEST_CONFIG) src -vv -rA -s
+	@PIPENV_PIPFILE=$(PIPENV_PIPFILE) pipenv run pytest -c $(PYTEST_CONFIG) components -vv -rA -s
 
 integration-test: check-tools check-docker docker-up
 	@echo "Waiting for broker and components..."
@@ -54,7 +54,7 @@ integration-test: check-tools check-docker docker-up
 # Все тесты подряд: unit, затем полный прогон (ОРВД, SITL, МБ и т.д.) с краткими описаниями
 run-all: check-tools
 	@echo "========== Unit-тесты компонентов =========="
-	@PIPENV_PIPFILE=$(PIPENV_PIPFILE) pipenv run pytest -c $(PYTEST_CONFIG) src -v --tb=short -rA
+	@PIPENV_PIPFILE=$(PIPENV_PIPFILE) pipenv run pytest -c $(PYTEST_CONFIG) components -v --tb=short -rA
 	@echo ""
 	@echo "========== Полный прогон системы (интеграция) =========="
 	@set -a && . $(GENERATED)/.env 2>/dev/null && set +a && \
