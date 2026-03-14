@@ -11,6 +11,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Импорты используют components.* — маппинг agrodron/src -> components
+RUN ln -s /app/agrodron/src /app/components
+
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 

@@ -1,4 +1,4 @@
-.PHONY: help prepare check-tools check-docker unit-test integration-test tests docker-up docker-down docker-logs
+.PHONY: help prepare check-tools check-docker unit-test integration-test tests docker-up docker-down docker-logs run-all full-run
 
 PIPENV_PIPFILE = ../config/Pipfile
 PYTEST_CONFIG = ../config/pyproject.toml
@@ -14,7 +14,9 @@ help:
 	@echo "make docker-logs       - Логи"
 	@echo "make unit-test         - Unit тесты компонентов"
 	@echo "make integration-test  - Интеграционные тесты (docker required)"
-	@echo "make tests             - Все тесты"
+	@echo "make tests             - Все тесты (unit + integration)"
+	@echo "make run-all           - Все тесты подряд с описаниями (unit + полный прогон системы)"
+	@echo "make full-run          - Поднять систему, run-all, остановить (реальный запуск дрона)"
 
 prepare:
 	@cd .. && PIPENV_PIPFILE=config/Pipfile pipenv run python scripts/prepare_system.py agrodron
@@ -48,5 +50,21 @@ integration-test: check-tools check-docker docker-up
 	@set -a && . $(GENERATED)/.env && set +a && \
 		PIPENV_PIPFILE=$(PIPENV_PIPFILE) pipenv run pytest -c $(PYTEST_CONFIG) tests/test_integration.py -vv -rA -s
 	-$(MAKE) docker-down
+
+# Все тесты подряд: unit, затем полный прогон (ОРВД, SITL, МБ и т.д.) с краткими описаниями
+run-all: check-tools
+	@echo "========== Unit-тесты компонентов =========="
+	@PIPENV_PIPFILE=$(PIPENV_PIPFILE) pipenv run pytest -c $(PYTEST_CONFIG) src -v --tb=short -rA
+	@echo ""
+	@echo "========== Полный прогон системы (интеграция) =========="
+	@set -a && . $(GENERATED)/.env 2>/dev/null && set +a && \
+		PIPENV_PIPFILE=$(PIPENV_PIPFILE) pipenv run pytest -c $(PYTEST_CONFIG) tests/test_full_system_run.py tests/test_integration.py -v --tb=short -rA || true
+
+# Одна команда: поднять систему, прогнать все тесты, остановить
+full-run: check-tools check-docker docker-up
+	@echo "Ожидание запуска брокера и компонентов..."
+	@sleep 45
+	@$(MAKE) run-all
+	-@$(MAKE) docker-down
 
 tests: unit-test integration-test
