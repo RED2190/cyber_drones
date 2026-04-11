@@ -9,9 +9,11 @@ class MissionStatus:
     CREATED: str = "created"
     ASSIGNED: str = "assigned"
     RUNNING: str = "running"
+    COMPLETED: str = "completed"
 
 @dataclass(frozen=True)
 class DroneStatus:
     AVAILABLE: str = "available"
     RESERVED: str = "reserved"
     BUSY: str = "busy"
+    IDLE: str = "idle"

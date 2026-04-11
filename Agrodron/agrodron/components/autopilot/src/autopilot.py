@@ -601,7 +601,8 @@ class AutopilotComponent(BaseComponent):
             self._request_charging_droneport()
 
             mid = self._mission.get("mission_id") if self._mission else None
-            self._notify_nus("mission_completed", {"mission_id": mid})
+            drone_id = config.orvd_drone_id()
+            self._notify_nus("mission_completed", {"mission_id": mid, "drone_id": drone_id})
             self._log_to_journal("AUTOPILOT_MISSION_COMPLETED", {"mission_id": mid})
             self._log_to_journal("AUTOPILOT_READY_FOR_NEW_MISSION", {"mission_id": mid})
 
