@@ -17,6 +17,7 @@ help:
 	@echo "make tests             - Все тесты"
 
 prepare:
+	@cd ../.. && PIPENV_PIPFILE=config/Pipfile pipenv install
 	@cd ../.. && PIPENV_PIPFILE=config/Pipfile pipenv run python scripts/prepare_system.py systems/drone_port
 
 docker-up: prepare
