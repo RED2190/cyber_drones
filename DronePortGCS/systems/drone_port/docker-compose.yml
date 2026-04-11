@@ -1,0 +1,144 @@
+# Docker Compose для DronePort.
+# Только сервисы компонентов. Брокер запускается отдельно (docker/docker-compose.yml).
+# Этот файл НЕ используется напрямую — его собирает scripts/prepare_system.py.
+
+services:
+  redis:
+    image: redis:7-alpine
+    profiles: ["kafka", "mqtt"]
+    networks:
+      - drones_net
+    restart: unless-stopped
+
+  state_store:
+    build:
+      context: ../..
+      dockerfile: systems/drone_port/src/state_store/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - COMPONENT_ID=state_store
+      - INSTANCE_ID=${INSTANCE_ID:-1}
+      - SYSTEM_NAME=${SYSTEM_NAME:-drone_port}
+      - BROKER_TYPE=${BROKER_TYPE:-mqtt}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin_secret_123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    restart: unless-stopped
+
+  orchestrator:
+    build:
+      context: ../..
+      dockerfile: systems/drone_port/src/orchestrator/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - COMPONENT_ID=orchestrator
+      - INSTANCE_ID=${INSTANCE_ID:-1}
+      - SYSTEM_NAME=${SYSTEM_NAME:-drone_port}
+      - BROKER_TYPE=${BROKER_TYPE:-mqtt}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin_secret_123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    restart: unless-stopped
+
+  drone_manager:
+    build:
+      context: ../..
+      dockerfile: systems/drone_port/src/drone_manager/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - COMPONENT_ID=drone_manager
+      - INSTANCE_ID=${INSTANCE_ID:-1}
+      - SYSTEM_NAME=${SYSTEM_NAME:-drone_port}
+      - BROKER_TYPE=${BROKER_TYPE:-mqtt}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin_secret_123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    restart: unless-stopped
+
+  drone_registry:
+    build:
+      context: ../..
+      dockerfile: systems/drone_port/src/drone_registry/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - COMPONENT_ID=drone_registry
+      - INSTANCE_ID=${INSTANCE_ID:-1}
+      - SYSTEM_NAME=${SYSTEM_NAME:-drone_port}
+      - BROKER_TYPE=${BROKER_TYPE:-mqtt}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin_secret_123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    restart: unless-stopped
+
+  port_manager:
+    build:
+      context: ../..
+      dockerfile: systems/drone_port/src/port_manager/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - COMPONENT_ID=port_manager
+      - INSTANCE_ID=${INSTANCE_ID:-1}
+      - SYSTEM_NAME=${SYSTEM_NAME:-drone_port}
+      - BROKER_TYPE=${BROKER_TYPE:-mqtt}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin_secret_123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    restart: unless-stopped
+
+  charging_manager:
+    build:
+      context: ../..
+      dockerfile: systems/drone_port/src/charging_manager/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - COMPONENT_ID=charging_manager
+      - INSTANCE_ID=${INSTANCE_ID:-1}
+      - SYSTEM_NAME=${SYSTEM_NAME:-drone_port}
+      - BROKER_TYPE=${BROKER_TYPE:-mqtt}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin_secret_123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    restart: unless-stopped
+
+networks:
+  drones_net:
+    external: true
+    name: ${DOCKER_NETWORK:-drones_net}

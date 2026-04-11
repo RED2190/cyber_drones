@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y make
+
+    - name: Create .env
+      run: cp docker/example.env docker/.env
+
+    - name: Initialization
+      run: make init
+
+    - name: Run unit-tests
+      run: make unit-test
+
+    - name: Upload unit test report (JUnit)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: pytest-unit-junit
+        path: artifacts/pytest-unit.xml
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y make
+
+    - name: Create .env
+      run: cp docker/example.env docker/.env
+
+    - name: Initialization
+      run: make init
+
+    - name: Docker up
+      run: |
+        make docker-up
+        make gcs-system-up
+        make drone-port-system-up
+
+    - name: Run integration-tests
+      run: make integration-test-run
+
+    - name: Dump logs for each container
+      if: always()
+      run: |
+        docker logs gcs-mission_store-1 || true
+        docker logs gcs-drone_store-1 || true
+        docker logs gcs-mission_converter-1 || true
+        docker logs gcs-orchestrator-1 || true
+        docker logs gcs-path_planner-1 || true
+        docker logs gcs-drone_manager-1 || true
+        docker logs drone-port-state_store-1 || true
+        docker logs drone-port-port_manager-1 || true
+        docker logs drone-port-drone_registry-1 || true
+        docker logs drone-port-charging_manager-1 || true
+        docker logs drone-port-drone_manager-1 || true
+        docker logs drone-port-orchestrator-1 || true
+
+    - name: Docker down
+      if: always()
+      run: |
+        make drone-port-system-down
+        make gcs-system-down
+        make docker-down

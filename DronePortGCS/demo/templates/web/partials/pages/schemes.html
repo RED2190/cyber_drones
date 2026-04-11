@@ -1,0 +1,30 @@
+<section class="page" id="schemes_page">
+  <section class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Схемы GCS</div>
+      <div class="panel-meta">Из папки systems/gcs/docs/diagrams</div>
+    </div>
+    <div class="panel-body">
+      {% if diagrams %}
+      <div class="schemes-grid">
+        {% for diagram in diagrams %}
+        <article class="panel scheme-card">
+          <div class="panel-header">
+            <div class="panel-title">{{ diagram.title }}</div>
+            <div class="panel-meta">{{ diagram.name }}</div>
+          </div>
+          <div class="panel-body">
+            <img class="scheme-preview" src="{{ diagram.url }}" alt="{{ diagram.name }}">
+            <a class="scheme-link" href="{{ diagram.url }}" target="_blank" rel="noopener noreferrer">
+              Открыть изображение отдельно
+            </a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="message-box">Схемы не найдены в папке `systems/gcs/docs/diagrams`.</div>
+      {% endif %}
+    </div>
+  </section>
+</section>

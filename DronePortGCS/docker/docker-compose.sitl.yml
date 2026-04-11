@@ -1,0 +1,122 @@
+# SITL-модуль + мост DronePort→SITL. Подключать к общему брокеру и сети drones_net.
+# Запуск (из корня DronePortGCS-integration_drone):
+#   С брокером из этого репозитория (mqtt + sitl):
+#     docker compose -f docker/docker-compose.yml -f docker/docker-compose.sitl.yml \
+#       --env-file docker/.env --profile mqtt --profile sitl up -d --build
+#   Только SITL, если Mosquitto уже запущен (та же сеть, hostname mosquitto):
+#     make docker-net
+#     docker compose -f docker/docker-compose.yml -f docker/docker-compose.sitl.yml \
+#       --env-file docker/.env --profile sitl up -d --build
+#
+# Контекст сборки SITL: ../../SITL-module-main/SITL-module-main (относительно каталога docker/)
+
+services:
+  sitl_redis:
+    image: redis:7-alpine
+    container_name: sitl_redis
+    profiles: ["sitl"]
+    networks:
+      - drones_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  sitl_verifier:
+    build:
+      context: ../../SITL-module-main/SITL-module-main
+      dockerfile: Dockerfile
+    container_name: sitl_verifier
+    profiles: ["sitl"]
+    command: ["python", "-u", "src/verifier.py"]
+    environment:
+      BROKER_BACKEND: mqtt
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      MQTT_USERNAME: ${ADMIN_USER:-admin}
+      MQTT_PASSWORD: ${ADMIN_PASSWORD:-admin_secret_123}
+      MQTT_QOS: "1"
+      COMMAND_TOPIC: sitl/commands
+      HOME_TOPIC: sitl-drone-home
+      INPUT_TOPICS: sitl/commands,sitl-drone-home
+      VERIFIED_COMMAND_TOPIC: sitl/verified-commands
+      VERIFIED_HOME_TOPIC: sitl/verified-home
+    networks:
+      - drones_net
+    # Mosquitto поднимается отдельно (make docker-up) или снаружи — должен быть в drones_net как hostname mosquitto.
+    restart: unless-stopped
+
+  sitl_controller:
+    build:
+      context: ../../SITL-module-main/SITL-module-main
+      dockerfile: Dockerfile
+    container_name: sitl_controller
+    profiles: ["sitl"]
+    command: ["python", "-u", "src/controller.py"]
+    environment:
+      BROKER_BACKEND: mqtt
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      MQTT_USERNAME: ${ADMIN_USER:-admin}
+      MQTT_PASSWORD: ${ADMIN_PASSWORD:-admin_secret_123}
+      MQTT_QOS: "1"
+      REDIS_URL: redis://sitl_redis:6379
+      VERIFIED_COMMAND_TOPIC: sitl/verified-commands
+      VERIFIED_HOME_TOPIC: sitl/verified-home
+      STATE_TTL_SEC: "7200"
+    networks:
+      - drones_net
+    depends_on:
+      sitl_redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  sitl_core:
+    build:
+      context: ../../SITL-module-main/SITL-module-main
+      dockerfile: Dockerfile
+    container_name: sitl_core
+    profiles: ["sitl"]
+    command: ["python", "-u", "src/core.py"]
+    environment:
+      REDIS_URL: redis://sitl_redis:6379
+      UPDATE_FREQUENCY_HZ: "10.0"
+      STATE_TTL_SEC: "7200"
+    networks:
+      - drones_net
+    depends_on:
+      sitl_redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  sitl_messaging:
+    build:
+      context: ../../SITL-module-main/SITL-module-main
+      dockerfile: Dockerfile
+    container_name: sitl_messaging
+    profiles: ["sitl"]
+    command: ["python", "-u", "src/messaging.py"]
+    environment:
+      BROKER_BACKEND: mqtt
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      MQTT_USERNAME: ${ADMIN_USER:-admin}
+      MQTT_PASSWORD: ${ADMIN_PASSWORD:-admin_secret_123}
+      MQTT_QOS: "1"
+      REDIS_URL: redis://sitl_redis:6379
+      # Логические имена sitl.telemetry.*; в messaging для MQTT приводятся к sitl/telemetry/* как у агродрона.
+      POSITION_REQUEST_TOPIC: sitl.telemetry.request
+      POSITION_RESPONSE_TOPIC: sitl.telemetry.response
+    networks:
+      - drones_net
+    depends_on:
+      sitl_redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  drones_net:
+    external: true
+    name: ${DOCKER_NETWORK:-drones_net}

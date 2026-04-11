@@ -1,0 +1,35 @@
+<section class="page" id="dronoport_page">
+  <section class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Карта Дронопорта</div>
+    </div>
+    <div class="panel-body">
+      <div class="port-visualization">
+        <div class="port-map-container" id="portMapContainer">
+          <div class="port-map-loading">
+            Ожидание событий взлета и посадки или ручного обновления.
+          </div>
+        </div>
+
+        <div class="port-legend">
+          <div class="legend-item">
+            <span class="legend-color available"></span>
+            <span>Свободен</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color occupied"></span>
+            <span>Занят</span>
+          </div>
+        </div>
+
+        <div class="port-stats" id="portStats">
+          <span>Всего: <b id="totalPorts">0</b></span>
+          <span>Свободно: <b id="availablePorts">0</b></span>
+          <span>Занято: <b id="occupiedPorts">0</b></span>
+        </div>
+
+        <button class="ghost" id="refresh_port_map_btn" type="button">Обновить статус портов</button>
+      </div>
+    </div>
+  </section>
+</section>
