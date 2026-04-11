@@ -43,7 +43,7 @@ help:
 # ---------------------------------------------------------------------------
 
 prepare:
-	@cd .. && $(PIPENV) run python scripts/prepare_system.py agrodron
+	@cd .. && $(PIPENV) install --dev && $(PIPENV) run python scripts/prepare_system.py agrodron
 
 # ---------------------------------------------------------------------------
 #  Тесты
