@@ -1,2 +1,0 @@
-"""AgroDron system components package."""
-
