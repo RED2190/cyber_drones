@@ -273,9 +273,13 @@ class AutopilotComponent(BaseComponent):
         except (TypeError, ValueError):
             return
 
+        # Расчёт 3D-расстояния до целевой точки
         d_lat = t_lat - lat
         d_lon = t_lon - lon
-        distance_m = math.hypot(d_lat, d_lon) * 111_000.0
+        d_alt = t_alt - alt
+        # Конвертация градусов в метры (приблизительно)
+        horizontal_distance_m = math.hypot(d_lat, d_lon) * 111_000.0
+        distance_m = math.sqrt(horizontal_distance_m**2 + d_alt**2)
 
         # Порог достижения точки
         reach_threshold_m = 2.0
