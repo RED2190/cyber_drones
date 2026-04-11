@@ -1,7 +1,7 @@
 # Точка входа интеграции: НУС/Дронопорт/SITL — DronePortGCS-integration_drone; дрон — Agrodron-master/agrodron.
 
 NUS_DIR := DronePortGCS-integration_drone
-AGRODRON_DIR := Agrodron-master/agrodron
+AGRODRON_DIR := Agrodron/agrodron
 
 .PHONY: help stack-up stack-down docker-net web-nus agrodron-up agrodron-down full-stack-up full-stack-down
 
