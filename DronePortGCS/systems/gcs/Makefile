@@ -15,6 +15,7 @@ help:
 	@echo "make tests             - Все тесты"
 
 prepare:
+	@cd ../.. && PIPENV_PIPFILE=config/Pipfile pipenv install
 	@cd ../.. && PIPENV_PIPFILE=config/Pipfile pipenv run python scripts/prepare_system.py systems/gcs
 
 docker-up: prepare

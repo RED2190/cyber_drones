@@ -29,5 +29,6 @@ class ComponentTopics:
 
 
 class DroneManagerActions:
-    REQUEST_TAKEOFF = "request_takeoff"
     REQUEST_LANDING = "request_landing"
+    REQUEST_TAKEOFF = "request_takeoff"
+    REQUEST_CHARGING = "request_charging"
