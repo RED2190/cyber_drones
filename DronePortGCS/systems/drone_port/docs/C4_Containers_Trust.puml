@@ -1,0 +1,50 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_LEFT_RIGHT()
+
+AddElementTag("trusted", $bgColor="#E8F5E9", $fontColor="#1B5E20", $borderColor="#2E7D32", $legendText="Высокая проверенность тестами (>70%)")
+AddElementTag("controlled", $bgColor="#FFF8E1", $fontColor="#E65100", $borderColor="#FB8C00", $legendText="Контролируемая внутренняя зона")
+AddElementTag("untrusted", $bgColor="#FFEBEE", $fontColor="#B71C1C", $borderColor="#C62828", $legendText="Внешняя или слабоконтролируемая среда")
+
+AddRelTag("trusted_flow", $textColor="#1B5E20", $lineColor="#2E7D32", $legendText="Внутренний контролируемый поток")
+AddRelTag("external_flow", $textColor="#B71C1C", $lineColor="#C62828", $legendText="Поток недоверенных данных")
+
+System_Ext(operator_system, "Эксплуатант", "Внешняя система, отслеживающая статусы дронов", $tags="untrusted")
+System_Ext(drone, "Дрон", "Запрашивает посадку, взлет и зарядку", $tags="untrusted")
+System_Ext(sitl, "SITL", "Внешняя среда симуляции, получающая HOME-координаты дрона", $tags="untrusted")
+
+System_Boundary(drone_port, "Дронопорт") {
+  Container(orchestrator, "Orchestrator", "Внешняя точка входа для Эксплуатанта", $tags="controlled")
+  Container(drone_manager, "DroneManager", "Обрабатывает запросы дронов на посадку, взлет и зарядку", $tags="controlled")
+  Container(drone_registry, "DroneRegistry", "Хранит состояние дронов и уровень батареи", $tags="controlled")
+  Container(port_manager, "PortManager", "Резервирует и освобождает посадочные слоты", $tags="trusted")
+  Container(charging_manager, "ChargingManager", "Запускает зарядку и обновляет состояние батареи", $tags="untrusted")
+  Container(state_store, "StateStore", "Хранит состояние портов в Redis", $tags="controlled")
+  ContainerDb(redis, "Redis", "Порты и записи о дронах", $tags="controlled")
+}
+
+Rel(operator_system, orchestrator, "get_available_drones", $tags="external_flow")
+Rel(orchestrator, drone_registry, "get_available_drones", $tags="trusted_flow")
+
+Rel(drone, drone_manager, "request_landing / request_takeoff", $tags="external_flow")
+Rel(drone_manager, sitl, "sitl-drone-home (HOME)", $tags="trusted_flow")
+
+Rel(drone_manager, port_manager, "request_landing / get_port_status / free_slot", $tags="trusted_flow")
+Rel(drone_manager, drone_registry, "register_drone / get_drone", $tags="trusted_flow")
+Rel(drone_manager, charging_manager, "start_charging", $tags="trusted_flow")
+Rel(charging_manager, drone_registry, "charging_started / update_battery", $tags="external_flow")
+
+Rel(port_manager, state_store, "get_all_ports / update_port", $tags="trusted_flow")
+Rel(state_store, redis, "Порты", $tags="trusted_flow")
+Rel(drone_registry, redis, "Дроны", $tags="trusted_flow")
+
+note bottom of drone_port
+  Цели безопасности Дронопорта:
+  - ЦБ-1: каждый посадочный порт используется не более чем одним БАС одновременно
+  - ЦБ-2: выполняются только аутентичные и авторизованные команды
+  - ЦБ-3: Дронопорт передает целостную и подлинную критичную информацию
+  - ЦБ-4: для решений об обслуживании используются только подлинные данные самодиагностики БАС
+end note
+
+SHOW_LEGEND()
+@enduml

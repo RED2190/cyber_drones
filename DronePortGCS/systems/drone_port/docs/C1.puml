@@ -1,0 +1,14 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+LAYOUT_LEFT_RIGHT()
+
+System_Ext(operator_system, "Эксплуатант", "Внешняя система, отслеживающая статусы дронов")
+System(drone_port, "Дронопорт", "Управляет посадкой, взлетом, зарядкой и состоянием портов")
+System_Ext(drone, "Дрон", "Запрашивает посадку, взлет и зарядку")
+System_Ext(sitl, "SITL", "Внешняя среда симуляции, получающая HOME-координаты дрона")
+
+Rel(operator_system, drone_port, "get_available_drones")
+Rel(drone, drone_port, "request_landing / request_takeoff")
+Rel(drone_port, sitl, "sitl-drone-home (HOME)")
+
+@enduml

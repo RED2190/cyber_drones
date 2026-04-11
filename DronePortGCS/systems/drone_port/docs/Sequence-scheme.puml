@@ -1,0 +1,156 @@
+@startuml
+!pragma layout smetana
+skinparam responseMessageBelowArrow true
+skinparam participantPadding 10
+skinparam boxPadding 10
+skinparam packageStyle rectangle
+
+title 🚁 DronePort: Sequence Diagrams
+footer v1.droneport.dp-001 | Generated: 2026
+
+' === LEGEND ===
+legend right
+  | <#2E7D32>●</color> | Успешный путь |
+  | <#C62828>●</color> | Ошибка / альтернатива |
+  | <#FB8C00>●</color> | Фоновая операция |
+  | → | request/response |
+  | →> | publish-only |
+endlegend
+
+' === PARTICIPANTS ===
+participant "Эксплуатант" as Operator #LightYellow
+participant "Дрон (БВС)" as Drone #LightBlue
+participant "SITL Simulator" as SITL #LightCyan
+
+box "DronePort Components" #E8F5E9
+  participant "Orchestrator" as Orch #LightYellow
+  participant "DroneRegistry ⭐\n(Facade)" as DR #LightGreen
+  participant "DroneManager" as DM #LightGreen
+  participant "PortManager" as PM #LightGreen
+  participant "ChargingManager" as CM #LightGreen
+end box
+
+participant "StateStore\n(Redis)" as SS #Khaki
+
+' === SCENARIO 1: LANDING ===
+== 🛬 Сценарий 1: Посадка дрона ==
+
+Drone -> DM: request_landing {drone_id: "D-001"}
+activate DM
+DM -> PM: request_landing_slot {drone_id: "D-001"} #palegreen
+activate PM
+PM -> SS: is_port_occupied("P-01")? #fff8e1
+SS --> PM: false
+PM -> SS: save_port("P-01", {drone_id: "D-001", status: "reserved"})
+SS --> PM: ok
+PM --> DM: {status: "slot_assigned", port_id: "P-01"} #palegreen
+deactivate PM
+
+DM -> DR: register_drone {drone_id: "D-001", port_id: "P-01"}
+activate DR
+DR -> SS: save_drone("D-001", {...})
+SS --> DR: ok
+DR --> DM: {status: "registered"}
+deactivate DR
+
+DM ->> Drone: landing_allowed {port_id: "P-01", corridor: {...}} #palegreen
+deactivate DM
+
+' === SCENARIO 2: TAKEOFF ===
+== 🛫 Сценарий 2: Взлёт дрона ==
+
+Drone -> DM: request_takeoff {mission_id: "mission-001"}
+activate DM
+DM -> DR: get_drone {drone_id: "D-001"} #palegreen
+activate DR
+DR -> SS: get_drone("D-001")
+SS --> DR: {battery_level: "85.0"}
+
+alt battery_level < 20.0 #ffebee
+  DR --> DM: {status: "ok", drone: {..., safety_target: "low_battery_alert"}}
+  DM --> Drone: {status: "takeoff_denied", reason: "Low battery"}
+else battery_level >= 20.0 #palegreen
+  DR --> DM: {status: "ok"}
+  deactivate DR
+  DM ->> PM: release_slot {drone_id: "D-001"} #palegreen
+  activate PM
+  PM -> SS: save_port("P-01", {status: "free"})
+  PM -> SS: delete_drone("D-001")
+  deactivate PM
+  DM ->> DR: delete_drone {drone_id: "D-001"} #palegreen
+  activate DR
+  DR -> SS: delete_drone("D-001")
+  deactivate DR
+  DM ->> Drone: takeoff_allowed {} #palegreen
+end
+deactivate DM
+
+' === SCENARIO 3: FLEET REPORT ===
+== 📊 Сценарий 3: Запрос отчёта (Facade) ==
+
+Operator -> Orch: fleet_report {request_id: "req-123"} #palegreen
+activate Orch
+Orch -> DR: get_aggregated_status {request_id: "req-123"} #palegreen
+activate DR
+
+par #fff8e1
+  DR -> SS: list_drones()
+  SS --> DR: [...]
+else #fff8e1
+  DR -> PM: get_port_status {}
+  activate PM
+  PM -> SS: get_all_ports_status()
+  PM --> DR: {payload: [...]}
+  deactivate PM
+else #fff8e1
+  DR -> CM: get_charging_status {}
+  activate CM
+  CM -> SS: list_drones() #filter
+  CM --> DR: {payload: [...]}
+  deactivate CM
+end
+
+DR --> Orch: {fleet: {...}, ports: {...}, alerts: [...]} #palegreen
+deactivate DR
+Orch --> Operator: {status: "report_generated", payload: {...}} #palegreen
+deactivate Orch
+
+' === SCENARIO 4: START CHARGING (PUBLISH-ONLY) ===
+== 🔋 Сценарий 4: Запуск зарядки (publish-only) ==
+
+Operator -> Orch: start_charging {drone_id: "D-001"} #palegreen
+activate Orch
+Orch ->> CM: start_charging {payload: {drone_id: "D-001"}} #palegreen
+note right: ❌ Нет reply_to / ответа
+deactivate Orch
+
+activate CM
+CM -> SS: get_drone("D-001")
+SS --> CM: {...}
+CM -> SS: save_drone("D-001", {status: "charging"})
+CM ->> DR: update_state {drone_id: "D-001", status: "charging"} #palegreen
+CM ->> все: events.charging_started {drone_id: "D-001"} #palegreen
+deactivate CM
+
+' === SCENARIO 5: SITL POSITION UPDATE ===
+== 🧪 Сценарий 5: Обновление позиции для SITL ==
+
+Drone -> DM: update_sitl_position {lat: 55.75, lon: 37.61, alt: 10.5, battery: 78.0} #palegreen
+activate DM
+DM -> DM: _drone_positions["D-001"] = {...} #fff8e1
+DM --> Drone: {status: "position_updated"} #palegreen
+deactivate DM
+
+SITL -> DM: get_available_drones {} #palegreen
+activate DM
+DM -> DM: Фильтрация + чтение из кэша #fff8e1
+DM --> SITL: {payload: {drones: [{drone_id, location: {lat,lon,alt}, battery}, ...]}} #palegreen
+deactivate DM
+
+note right
+  ✅ Минимальные поля: lat, lon, alt, battery
+  ✅ Один формат для SITL и Эксплуатанта
+  ✅ Нет status/total/timestamp в ответе
+end note
+
+@enduml
