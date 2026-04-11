@@ -1,0 +1,50 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_LEFT_RIGHT()
+
+AddElementTag("trusted", $bgColor="#E8F5E9", $fontColor="#1B5E20", $borderColor="#2E7D32", $legendText="Высокая проверенность тестами (>70%)")
+AddElementTag("controlled", $bgColor="#FFF8E1", $fontColor="#E65100", $borderColor="#FB8C00", $legendText="Контролируемая внутренняя зона")
+AddElementTag("untrusted", $bgColor="#FFEBEE", $fontColor="#B71C1C", $borderColor="#C62828", $legendText="Внешняя или слабоконтролируемая среда")
+
+AddRelTag("trusted_flow", $textColor="#1B5E20", $lineColor="#2E7D32", $legendText="Внутренний контролируемый поток")
+AddRelTag("external_flow", $textColor="#B71C1C", $lineColor="#C62828", $legendText="Поток через внешнюю границу доверия")
+
+System_Ext(operator_system, "Эксплуатант", "Внешняя система постановки задач", $tags="untrusted")
+System_Ext(drone, "Дрон", "Внешняя система, выполняющая миссии и отдающая телеметрию по запросу", $tags="untrusted")
+
+System_Boundary(gcs, "НУС") {
+  Container(orchestrator, "Orchestrator", "Внешняя точка входа и координация сценариев", $tags="controlled")
+  Container(path_planner, "PathPlanner", "Построение маршрута и первичное создание миссии", $tags="trusted")
+  Container(mission_store, "MissionStore", "Хранилище миссий", $tags="controlled")
+  Container(mission_converter, "MissionConverter", "Конвертация маршрута в WPL", $tags="trusted")
+  Container(drone_manager, "DroneManager", "Отправка команд дрону и обновление статусов", $tags="controlled")
+  Container(drone_store, "DroneStore", "Хранилище состояния дрона и телеметрии", $tags="controlled")
+  ContainerDb(redis, "Redis", "DB 0: missions, DB 1: drones", $tags="controlled")
+}
+
+Rel(operator_system, orchestrator, "task.submit / task.assign / task.start", $tags="external_flow")
+Rel(orchestrator, path_planner, "path.plan", $tags="trusted_flow")
+Rel(path_planner, mission_store, "store.save_mission", $tags="trusted_flow")
+
+Rel(orchestrator, mission_converter, "mission.prepare", $tags="trusted_flow")
+Rel(mission_converter, mission_store, "store.get_mission", $tags="trusted_flow")
+
+Rel(orchestrator, drone_manager, "mission.upload / mission.start", $tags="trusted_flow")
+Rel(drone_manager, drone, "drone.upload_mission / drone.mission.start / telemetry.get", $tags="external_flow")
+Rel(drone, drone_manager, "telemetry", $tags="external_flow")
+
+Rel(drone_manager, mission_store, "store.update_mission", $tags="trusted_flow")
+Rel(drone_manager, drone_store, "store.update_drone / telemetry.save", $tags="trusted_flow")
+Rel(mission_store, redis, "Миссии", $tags="trusted_flow")
+Rel(drone_store, redis, "Дроны и телеметрия", $tags="trusted_flow")
+
+note bottom of gcs
+  Цели безопасности НУС:
+  - ЦБ-1: для планирования перемещения используются только подлинные заказы
+  - ЦБ-2: конфиденциальная информация доступна только авторизованным пользователям
+  - ЦБ-3: выполняются только аутентичные и авторизованные команды
+  - ЦБ-4: НУС передает целостную и подлинную критичную информацию
+end note
+
+SHOW_LEGEND()
+@enduml
