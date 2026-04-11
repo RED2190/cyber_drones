@@ -157,7 +157,7 @@ def prepare_system(system_dir: str):
         "services": {},
         "networks": {
             "drones_net": {
-                "driver": "bridge",
+                "external": True,
                 "name": "${DOCKER_NETWORK:-drones_net}",
             }
         },
