@@ -29,6 +29,7 @@ class DroneManagerComponent(BaseComponent):
     def _register_handlers(self):
         self.register_handler(DroneManagerActions.MISSION_UPLOAD, self._handle_mission_upload)
         self.register_handler(DroneManagerActions.MISSION_START, self._handle_mission_start)
+        self.register_handler(DroneManagerActions.MISSION_STATUS, self._handle_mission_status)
 
     def _proxy_request_drone(
         self,
@@ -288,5 +289,61 @@ class DroneManagerComponent(BaseComponent):
 
         if drone_id:
             self._start_telemetry_polling(drone_id)
+
+        return None
+
+    def _handle_mission_status(self, message: Dict[str, Any]) -> None:
+        """Обработка статуса миссии от дрона (например, mission_completed)."""
+        payload = message.get("payload", {})
+        event = payload.get("event")
+        mission_id = payload.get("mission_id")
+        correlation_id = message.get("correlation_id")
+
+        if event == "mission_completed" and mission_id:
+            # Обновляем статус миссии в хранилище
+            mission_update_message = {
+                "action": MissionStoreActions.UPDATE_MISSION,
+                "sender": self.component_id,
+                "payload": {
+                    "mission_id": mission_id,
+                    "fields": {
+                        "status": MissionStatus.COMPLETED,
+                    },
+                },
+            }
+            if correlation_id:
+                mission_update_message["correlation_id"] = correlation_id
+
+            self.bus.publish(
+                ComponentTopics.GCS_MISSION_STORE,
+                mission_update_message,
+            )
+
+            # Освобождаем дрон - находим drone_id из хранилища миссий
+            # Для упрощения предполагаем, что drone_id передан в payload
+            drone_id = payload.get("drone_id")
+            if drone_id:
+                drone_update_message = {
+                    "action": DroneStoreActions.UPDATE_DRONE,
+                    "sender": self.component_id,
+                    "payload": {
+                        "drone_id": drone_id,
+                        "status": DroneStatus.IDLE,
+                    },
+                }
+                if correlation_id:
+                    drone_update_message["correlation_id"] = correlation_id
+
+                self.bus.publish(
+                    ComponentTopics.GCS_DRONE_STORE,
+                    drone_update_message,
+                )
+
+            # Останавливаем опрос телеметрии для этого дрона
+            if drone_id and drone_id in self._telemetry_pollers:
+                thread, stop_event = self._telemetry_pollers[drone_id]
+                stop_event.set()
+                thread.join(timeout=1.0)
+                del self._telemetry_pollers[drone_id]
 
         return None
