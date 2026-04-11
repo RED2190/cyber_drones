@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Монитор системы AgroDron</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --muted: #8b9cb3;
+      --accent: #58a6ff;
+      --ok: #3fb950;
+      --warn: #d29922;
+      --err: #f85149;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      margin: 0;
+      padding: 16px 20px 32px;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 8px; }
+    .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+    .sub a { color: var(--accent); }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    section h2 {
+      font-size: 1rem;
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .banner-err {
+      background: rgba(248,81,73,0.12);
+      border: 1px solid var(--err);
+      color: #ffb4b0;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+    .banner-warn {
+      background: rgba(210,153,34,0.12);
+      border: 1px solid var(--warn);
+      color: #e3b565;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+    table.telemetry {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    table.telemetry th, table.telemetry td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    table.telemetry th { color: var(--muted); width: 38%; font-weight: 500; }
+    pre.json {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, monospace;
+      font-size: 0.78rem;
+      color: #c9d1d9;
+    }
+    .journal-list { display: flex; flex-direction: column; gap: 10px; max-height: 62vh; overflow-y: auto; }
+    .event-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,0.2);
+    }
+    .event-card .meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .event-card .title { font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+    .event-card .details { font-size: 0.82rem; color: #b8c4d3; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; background: #21262d; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <h1>Монитор системы</h1>
+  <p class="sub">Снимок телеметрии и журнал событий (через шину). API:
+    <a href="/api/snapshot">/api/snapshot</a> ·
+    <a href="/api/journal">/api/journal</a> ·
+    <a href="/api/telemetry">/api/telemetry</a>
+  </p>
+  <div class="grid">
+    <section>
+      <h2>Телеметрия (последний опрос)</h2>
+      <div id="telErr"></div>
+      <div id="telBody"></div>
+    </section>
+    <section>
+      <h2>Журнал событий</h2>
+      <div id="logBody" class="journal-list"></div>
+    </section>
+  </div>
+  <script>
+  const EVENT_RU = {
+    "COMPONENT_STARTED": "Компонент запущен",
+    "SECURITY_MONITOR_STARTED": "Монитор безопасности запущен",
+    "JOURNAL_SERVICE_READY": "Сервис журнала готов",
+    "TELEMETRY_AGGREGATE_FIRST_OK": "Первая агрегация телеметрии",
+    "NAVIGATION_SITL_LINK_OK": "Связь с SITL/навигацией",
+    "NAVIGATION_SITL_POLL_CONFIG": "Навигация: параметры опроса SITL",
+    "NAVIGATION_SITL_NO_DATA": "Навигация: нет данных от SITL (часто: нет HOME / состояния в Redis SITL)",
+    "NAVIGATION_SITL_TICK": "Навигация: опрос SITL (тик)",
+    "NAVIGATION_SITL_POLL_ERROR": "Навигация: ошибка опроса SITL",
+    "MOTORS_SITL_READY": "Приводы: готовность к SITL",
+    "SITL_MOTORS_OUT": "SITL: команда приводов (sitl/commands)",
+    "SITL_MOTORS_LAND_CMD": "SITL: команда посадки/авария",
+    "MISSION_HANDLER_SITL_HOME_SENDING": "Миссия: отправка HOME в SITL (начало)",
+    "MISSION_HANDLER_SITL_HOME_SENT": "Миссия: HOME отправлен в SITL (в шину)",
+    "MISSION_HANDLER_SITL_HOME_SEND_FAILED": "Миссия: не удалось отправить HOME в SITL",
+    "MISSION_HANDLER_SITL_HOME_VERIFIER_SENDING": "Миссия: HOME в verifier SITL (sitl-drone-home)",
+    "MISSION_HANDLER_SITL_HOME_VERIFIER_SENT": "Миссия: HOME ушёл в verifier SITL (Redis может заполниться)",
+    "MISSION_HANDLER_SITL_HOME_VERIFIER_FAILED": "Миссия: не удалось отправить HOME в verifier SITL",
+    "MISSION_HANDLER_SITL_SET_HOME": "Миссия: set_home в SITL (устар.)",
+    "MISSION_HANDLER_SITL_HOME_SKIPPED": "Миссия: set_home в SITL пропущен",
+    "NAVIGATION_SITL_HOME_APPLIED": "Навигация: позиция от SITL доступна (HOME применён в контуре)",
+    "SPRAYER_SITL_OUT": "Опрыскиватель: выход в SITL",
+    "NAVIGATION_GPS_DEGRADED": "Предупреждение: GPS",
+    "LIMITER_DEVIATION_WARNING": "Отклонение от маршрута",
+    "LIMITER_EMERGENCY_LAND_REQUIRED": "Требуется аварийная посадка",
+    "AUTOPILOT_MISSION_LOADED": "Миссия загружена",
+    "AUTOPILOT_STATE_CHANGE": "Смена состояния автопилота",
+    "AUTOPILOT_EMERGENCY_STOP": "Аварийная остановка",
+    "AUTOPILOT_KOVER_ACTIVE": "Режим Kover",
+    "AUTOPILOT_KOVER_LANDED": "Kover: посадка",
+    "AUTOPILOT_MISSION_COMPLETED": "Миссия завершена",
+    "ORVD_TAKEOFF_APPROVED": "ORVD: взлёт разрешён",
+    "ORVD_TAKEOFF_DENIED": "ORVD: взлёт отклонён",
+    "DRONEPORT_DEPARTURE_APPROVED": "DronePort: выезд разрешён",
+    "DRONEPORT_DEPARTURE_DENIED": "DronePort: выезд отклонён",
+    "EMERGENCY_PROTOCOL_STARTED": "Протокол ЧС",
+    "log_event": "Событие",
+  };
+
+  function ruEvent(name) {
+    if (!name) return "—";
+    return EVENT_RU[name] || name;
+  }
+
+  function fmtTime(ts) {
+    if (ts == null || ts === 0) return "—";
+    const d = new Date(typeof ts === "number" ? ts * 1000 : Date.parse(ts));
+    if (isNaN(d.getTime())) return String(ts);
+    return d.toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "medium" });
+  }
+
+  /** true, если в снимке telemetry нет осмысленного nav_state (часто до set_home в SITL). */
+  function needsSitlHomeHint(nav) {
+    if (nav == null) return true;
+    if (typeof nav !== "object") return false;
+    var ns = nav.nav_state != null ? nav.nav_state : nav.payload;
+    if (ns == null) return true;
+    if (typeof ns === "object" && Object.keys(ns).length === 0) return true;
+    if (ns.lat == null && ns.lon == null && ns.alt_m == null && ns.alt == null) return true;
+    return false;
+  }
+
+  function fmtPollTs(v) {
+    if (v == null || v === 0) return "—";
+    if (typeof v === "number" && v > 1e12) return fmtTime(v / 1000);
+    if (typeof v === "number" && v < 1e12) return fmtTime(v);
+    return String(v);
+  }
+
+  function renderTelemetryBlock(tel, err, ts, dbg, timeoutS) {
+    const errEl = document.getElementById("telErr");
+    const body = document.getElementById("telBody");
+    errEl.innerHTML = "";
+    if (err) {
+      let extra = "";
+      if (tel) {
+        extra += '<div class="banner-warn" style="margin-bottom:10px;">Таблица ниже — <strong>последний успешный</strong> снимок; текущий опрос к МБ завершился с ошибкой.</div>';
+      }
+      if (dbg) {
+        extra += '<div class="sub" style="margin-top:10px;line-height:1.4;">Диагностика: ' + escapeHtml(dbg) + "</div>";
+      }
+      if (timeoutS != null) {
+        extra += '<div class="sub" style="margin-top:6px;">Таймаут запроса к МБ (SYSTEM_MONITOR_TELEMETRY_TIMEOUT_S): <strong>' + escapeHtml(String(timeoutS)) + " с</strong> — должен быть <strong>не меньше</strong>, чем SECURITY_MONITOR_PROXY_REQUEST_TIMEOUT_S (ожидание цепочки telemetry внутри МБ, часто 10 с).</div>";
+      }
+      errEl.innerHTML = '<div class="banner-err">' + escapeHtml(err) + "</div>" + extra;
+    }
+    if (!tel && !err) {
+      body.innerHTML = '<div class="banner-warn">Нет данных: первый опрос ещё не вернул снимок. Подождите несколько секунд или проверьте, что контейнер <code>telemetry</code> запущен и политика МБ разрешает system_monitor → telemetry / get_state.</div>';
+      return;
+    }
+    if (!tel) {
+      body.innerHTML = "<p class=\"muted\">Снимок недоступен. См. сообщение выше.</p>";
+      return;
+    }
+    const m = tel.motors, sp = tel.sprayer, nav = tel.navigation;
+    let homeBanner = "";
+    if (needsSitlHomeHint(nav)) {
+      homeBanner =
+        '<div class="banner-warn" style="margin-bottom:12px;line-height:1.45;">' +
+        "<strong>Навигация без координат.</strong> Типичная причина — в Redis SITL ещё нет состояния дрона " +
+        "(ключ <code>drone:&lt;id&gt;:state</code>), пока не отработал цепочка <strong>HOME</strong>. " +
+        "Загрузите миссию (<code>load_mission</code>), в журнале должно появиться " +
+        "<code>MISSION_HANDLER_SITL_HOME_SENT</code>. Если было <code>MISSION_HANDLER_SITL_HOME_SKIPPED</code> — " +
+        "проверьте <code>SITL_TOPIC</code>. Также смотрите события <code>NAVIGATION_SITL_NO_DATA</code> в журнале справа." +
+        "</div>";
+    }
+    const rows = [
+      ["Время опроса (last_poll_ts)", fmtPollTs(tel.last_poll_ts)],
+      ["Двигатели (motors)", m ? "<pre class=\"json\">" + escapeHtml(JSON.stringify(m, null, 2)) + "</pre>" : "<span class=\"badge\">нет данных</span>"],
+      ["Опрыскиватель (sprayer)", sp ? "<pre class=\"json\">" + escapeHtml(JSON.stringify(sp, null, 2)) + "</pre>" : "<span class=\"badge\">нет данных</span>"],
+      ["Навигация (navigation)", nav ? "<pre class=\"json\">" + escapeHtml(JSON.stringify(nav, null, 2)) + "</pre>" : "<span class=\"badge\">нет данных</span>"],
+    ];
+    let html = homeBanner + "<table class=\"telemetry\">";
+    rows.forEach(([k, v]) => { html += "<tr><th>" + k + "</th><td>" + v + "</td></tr>"; });
+    html += "</table>";
+    if (ts) html += "<p class=\"sub\" style=\"margin-top:10px\">Обновлено UI: " + fmtTime(ts) + "</p>";
+    body.innerHTML = html;
+  }
+
+  function escapeHtml(s) {
+    if (s == null) return "";
+    const d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function renderJournal(events) {
+    const el = document.getElementById("logBody");
+    if (!events || !events.length) {
+      el.innerHTML = "<p class=\"sub\">Событий пока нет (или журнал ещё не получил log_event по MQTT).</p>";
+      return;
+    }
+    const slice = events.slice(-50);
+    el.innerHTML = slice.map(function(e) {
+      const p = e.payload || {};
+      const ev = p.event || e.action || "—";
+      const src = p.source || "—";
+      const details = p.details != null ? p.details : (p.mission_id != null ? { mission_id: p.mission_id } : {});
+      const title = ruEvent(ev);
+      const detStr = typeof details === "object" ? JSON.stringify(details, null, 2) : String(details);
+      return (
+        '<div class="event-card">' +
+          '<div class="meta">' + fmtTime(e.ts) + " · " + escapeHtml(String(src)) + "</div>" +
+          '<div class="title">' + escapeHtml(title) + " <span class=\"badge\">" + escapeHtml(String(ev)) + "</span></div>" +
+          (detStr && detStr !== "{}" ? '<pre class="json">' + escapeHtml(detStr) + "</pre>" : "") +
+        "</div>"
+      );
+    }).join("");
+  }
+
+  async function refresh() {
+    try {
+      const r = await fetch("/api/snapshot");
+      const d = await r.json();
+      const tsUi = d.telemetry_ts ? d.telemetry_ts : null;
+      renderTelemetryBlock(d.telemetry, d.telemetry_error, tsUi, d.telemetry_debug, d.telemetry_request_timeout_s);
+      renderJournal(d.journal_events || []);
+    } catch (ex) {
+      document.getElementById("telErr").innerHTML = '<div class="banner-err">Ошибка запроса: ' + escapeHtml(String(ex)) + "</div>";
+    }
+  }
+  refresh();
+  setInterval(refresh, 2000);
+  </script>
+</body>
+</html>
