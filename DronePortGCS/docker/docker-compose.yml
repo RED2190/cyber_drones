@@ -68,5 +68,5 @@ services:
 
 networks:
   drones_net:
-    driver: bridge
+    external: true
     name: ${DOCKER_NETWORK:-drones_net}
