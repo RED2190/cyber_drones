@@ -145,7 +145,14 @@ class MissionHandlerComponent(BaseComponent):
             event="MISSION_HANDLER_MISSION_SENT_TO_AUTOPILOT",
             details={"mission_id": mid},
         )
-        self._send_home_to_sitl(mission)
+        # HOME assignment is managed by DronePort during takeoff flow.
+        self._log_to_journal(
+            event="MISSION_HANDLER_SITL_HOME_SKIPPED",
+            details={
+                "mission_id": mid,
+                "reason": "home_managed_by_droneport",
+            },
+        )
         return {"ok": True}
 
     def _handle_validate_only(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:

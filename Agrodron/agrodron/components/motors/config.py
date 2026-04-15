@@ -1,7 +1,7 @@
 import os
 from typing import Optional
 
-from sdk.topic_utils import topic_for, system_name
+from sdk.topic_utils import instance_id, topic_for
 
 
 def component_topic() -> str:
@@ -26,7 +26,7 @@ def sitl_commands_topic() -> str:
 
 
 def sitl_drone_id() -> str:
-    return (os.environ.get("SITL_DRONE_ID") or "drone_001").strip()
+    return instance_id()
 
 
 def _get_float(name: str, default: float, *, min_value: Optional[float] = None) -> float:

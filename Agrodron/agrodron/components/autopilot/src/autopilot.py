@@ -36,6 +36,9 @@ class AutopilotComponent(BaseComponent):
         # посадку до земли, затем переходит в ожидание (PAUSED).
         self._kover_active: bool = False
         self._landing_active: bool = False
+        self._landing_port_confirmed: bool = False
+        self._last_landing_port_request_ts: float = 0.0
+        self._landing_port_retry_interval_s: float = 2.0
 
         self._control_thread: Optional[threading.Thread] = None
         self._control_interval_s: float = config.autopilot_control_interval_s()
@@ -556,7 +559,12 @@ class AutopilotComponent(BaseComponent):
                 "model": config.droneport_drone_model(),
             },
         )
-        return self._droneport_landing_ok(resp)
+        ok = self._droneport_landing_ok(resp)
+        if ok:
+            self._log_to_journal("DRONEPORT_LANDING_APPROVED", {"response": resp})
+        else:
+            self._log_to_journal("DRONEPORT_LANDING_DENIED", {"response": resp})
+        return ok
 
     def _notify_nus(self, event: str, details: Dict[str, Any]) -> None:
         topic = config.nus_topic()
@@ -574,8 +582,18 @@ class AutopilotComponent(BaseComponent):
 
     def _start_mission_landing(self, mission_id: Optional[str]) -> None:
         self._landing_active = True
+        self._landing_port_confirmed = False
+        self._last_landing_port_request_ts = 0.0
         self._state = "LANDING"
-        self._request_landing_droneport()
+        self._landing_port_confirmed = self._request_landing_droneport()
+        self._last_landing_port_request_ts = time.monotonic()
+        if not self._landing_port_confirmed:
+            self._notify_nus(
+                "mission_waiting_landing_port",
+                {
+                    "mission_id": mission_id,
+                },
+            )
         self._log_to_journal("AUTOPILOT_LANDING_STARTED", {"mission_id": mission_id})
 
     def _handle_mission_landing(self) -> None:
@@ -587,6 +605,27 @@ class AutopilotComponent(BaseComponent):
             lat = float(self._last_nav_state.get("lat", 0.0))
             lon = float(self._last_nav_state.get("lon", 0.0))
         except (TypeError, ValueError):
+            return
+
+        if not self._landing_port_confirmed:
+            # Backward-compatible landing flow: if landing mode was entered
+            # externally (without _start_mission_landing), do not block descent.
+            if self._last_landing_port_request_ts <= 0.0:
+                self._landing_port_confirmed = True
+
+        if not self._landing_port_confirmed:
+            now = time.monotonic()
+            if (now - self._last_landing_port_request_ts) >= self._landing_port_retry_interval_s:
+                self._landing_port_confirmed = self._request_landing_droneport()
+                self._last_landing_port_request_ts = now
+
+            # Keep position while waiting DronePort landing approval.
+            self._send_motors_target(
+                vx=0.0, vy=0.0, vz=0.0,
+                alt_m=alt, lat=lat, lon=lon,
+                heading_deg=self._last_nav_state.get("heading_deg", 0.0),
+                drop=False,
+            )
             return
 
         heading = self._last_nav_state.get("heading_deg", 0.0)
@@ -630,7 +669,7 @@ class AutopilotComponent(BaseComponent):
             return
         if config.droneport_mock_success():
             return
-        self._proxy_request_external(
+        resp = self._proxy_request_external(
             topic,
             "request_charging",
             {
@@ -640,5 +679,9 @@ class AutopilotComponent(BaseComponent):
                 ),
             },
         )
+        if isinstance(resp, dict) and not resp.get("error"):
+            self._log_to_journal("DRONEPORT_CHARGING_REQUESTED", {"response": resp})
+        else:
+            self._log_to_journal("DRONEPORT_CHARGING_REQUEST_FAILED", {"response": resp})
 
 

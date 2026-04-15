@@ -6,7 +6,7 @@ SITL опрашивается по шине (request к топику SITL-ада
 import os
 from typing import Optional
 
-from sdk.topic_utils import topic_for, system_name
+from sdk.topic_utils import instance_id, topic_for
 
 
 def component_topic() -> str:
@@ -28,7 +28,7 @@ def sitl_telemetry_request_topic() -> str:
 
 
 def sitl_drone_id() -> str:
-    return (os.environ.get("SITL_DRONE_ID") or "drone_001").strip()
+    return instance_id()
 
 
 def journal_topic() -> str:
