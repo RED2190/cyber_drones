@@ -1,0 +1,35 @@
+[submodule "fabric-network"]
+	path = fabric-network
+	url = https://gitflic.ru/project/losssaw3/smart-contracts-hlf.git
+	branch = dev
+[submodule "systems/DroneAnalytics"]
+	path = systems/DroneAnalytics
+	url = https://github.com/OurPaintTeam/DroneAnalytics.git
+[submodule "systems/insurer"]
+	path = systems/insurer
+	url = https://github.com/DashDashh/Insurer.git
+	branch = integration
+[submodule "systems/cyber_drons"]
+	path = systems/cyber_drons
+	url = https://gitflic.ru/project/itmoniks/cyber_drons.git
+	branch = agrodron_for_andrey
+[submodule "systems/drones"]
+	path = systems/drones
+	url = https://github.com/AMCP-Drones/drones.git
+	branch = extract/only-system
+[submodule "systems/orvd_system"]
+	path = systems/orvd_system
+	url = https://github.com/autoryuzo/OpBD.git
+	branch = system
+[submodule "systems/Agregator"]
+	path = systems/Agregator
+	url = https://github.com/DashDashh/Agregator.git
+	branch = integration-system-layout
+[submodule "systems/team1-regulator_operation_devsecops"]
+	path = systems/team1-regulator_operation_devsecops
+	url = https://github.com/souma94621/team1-regulator_operation_devsecops.git
+	branch = integration
+[submodule "systems/SITL-module"]
+	path = systems/SITL-module
+	url = https://github.com/SECS-team5/SITL-module.git
+	branch = pure

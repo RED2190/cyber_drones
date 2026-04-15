@@ -1,0 +1,22 @@
+FROM jenkins/jenkins:lts
+
+USER root
+
+# 1. Устанавливаем зависимости
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Скачиваем статические бинарники Docker CLI (версия 24.0.7)
+RUN curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-24.0.7.tgz | tar zxvf - --strip-components=1 -C /usr/bin/ docker/docker
+
+# 3. Скачиваем Docker Compose V2 и кладем его и в плагины, и в bin
+RUN mkdir -p /usr/libexec/docker/cli-plugins/
+RUN curl -SL https://github.com/docker/compose/releases/download/v2.26.1/docker-compose-linux-x86_64 -o /usr/libexec/docker/cli-plugins/docker-compose
+RUN chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+
+# 4. Создаем симлинки, чтобы работали ВСЕ варианты команд
+RUN ln -s /usr/libexec/docker/cli-plugins/docker-compose /usr/bin/docker-compose
+
+USER jenkins

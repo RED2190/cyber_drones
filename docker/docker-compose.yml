@@ -1,0 +1,143 @@
+# Инфраструктура брокера (только kafka + mosquitto).
+# Сервисы приложений (системы, компоненты) — в dummy_component/docker/, dummy_system/docker/.
+# name задаёт общий проект: при запуске из корня или из dummy_component используется один и тот же
+# набор контейнеров (один Kafka), без конфликта портов.
+name: drones
+
+services:
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    profiles: ["kafka"]
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+      - "${KAFKA_INTERNAL_PORT:-29092}:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: SASL_PLAINTEXT://0.0.0.0:9092,SASL_PLAINTEXT_INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://localhost:${KAFKA_PORT:-9092},SASL_PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_PLAINTEXT_INTERNAL:SASL_PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT_INTERNAL
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_OPTS: -Djava.security.auth.login.config=/tmp/jaas.conf
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      COMPONENT_USER_A: ${COMPONENT_USER_A:-}
+      COMPONENT_PASSWORD_A: ${COMPONENT_PASSWORD_A:-}
+      COMPONENT_USER_B: ${COMPONENT_USER_B:-}
+      COMPONENT_PASSWORD_B: ${COMPONENT_PASSWORD_B:-}
+    volumes:
+      - ./kafka/entrypoint.sh:/entrypoint.sh:ro
+    command: ["/bin/sh", "/entrypoint.sh"]
+    networks:
+      - drones_net
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f java || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 60s
+    restart: unless-stopped
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    user: "0:0"
+    profiles: ["mqtt"]
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+    environment:
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      COMPONENT_USER_A: ${COMPONENT_USER_A:-}
+      COMPONENT_PASSWORD_A: ${COMPONENT_PASSWORD_A:-}
+      COMPONENT_USER_B: ${COMPONENT_USER_B:-}
+      COMPONENT_PASSWORD_B: ${COMPONENT_PASSWORD_B:-}
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mqtt/entrypoint.sh:/entrypoint.sh:ro
+    command: ["/bin/sh", "/entrypoint.sh"]
+    networks:
+      - drones_net
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_pub -h localhost -u $$ADMIN_USER -P $$ADMIN_PASSWORD -t healthcheck -m ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+  fabric-proxy:
+    build:
+      context: ./fabric-proxy
+      dockerfile: Dockerfile
+    container_name: fabric-proxy
+    profiles: ["fabric"]
+    restart: on-failure
+    environment:
+      - FABRIC_PEER_ENDPOINT=peer0.aggregator.drone-network.local:7051
+      - FABRIC_PEER_HOST=peer0.aggregator.drone-network.local
+      - FABRIC_PEER_ORG=aggregator.drone-network.local
+      - FABRIC_MSP_ID=AggregatorMSP
+      - FABRIC_USER=Admin@aggregator.drone-network.local
+      - FABRIC_CHANNEL=dronechannel
+      - FABRIC_CHAINCODE=drone-chaincode
+      - FABRIC_CRYPTO_PATH=/crypto
+      - PORT=3000
+    volumes:
+      - ../fabric-network/network/crypto-config:/crypto:ro
+    ports:
+      - "${FABRIC_PROXY_PORT:-3000}:3000"
+    networks:
+      - drones_net
+      - fabric_drone
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  ledger-gateway:
+    build:
+      context: ./ledger-gateway
+      dockerfile: Dockerfile
+    container_name: ledger-gateway
+    profiles: ["fabric"]
+    restart: on-failure
+    environment:
+      - PYTHONUNBUFFERED=1
+      - BROKER_TYPE=${BROKER_TYPE:-kafka}
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - FABRIC_PROXY_URL=http://fabric-proxy:3000
+    networks:
+      - drones_net
+    depends_on:
+      fabric-proxy:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+        required: false
+      mosquitto:
+        condition: service_healthy
+        required: false
+
+networks:
+  drones_net:
+    driver: bridge
+    name: ${DOCKER_NETWORK:-drones_net}
+  fabric_drone:
+    external: true
+    name: fabric_drone
