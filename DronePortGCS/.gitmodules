@@ -1,0 +1,8 @@
+[submodule "external/cyber_drons"]
+	path = external/cyber_drons
+	url = https://gitflic.ru/project/itmoniks/cyber_drons.git
+	branch = Integration
+[submodule "external/sitl_module"]
+	path = external/sitl_module
+	url = https://github.com/SECS-team5/SITL-module.git
+	branch = main

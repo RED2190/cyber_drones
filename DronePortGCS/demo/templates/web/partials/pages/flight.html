@@ -1,0 +1,110 @@
+<section class="page active" id="flight_page">
+  <div class="page-grid">
+    <aside class="sidebar">
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Управление Миссией</div>
+          <div class="panel-meta">Последовательный сценарий работы</div>
+        </div>
+        <div class="panel-body">
+          <div class="grid-2" id="assign_fields">
+            <div class="field">
+              <label for="drone_id">ID дрона</label>
+              <input id="drone_id" placeholder="Например, Agrodron001">
+            </div>
+            <div class="field">
+              <label>Источник маршрута</label>
+              <input value="Карта / Точки" disabled>
+            </div>
+          </div>
+          <div class="grid-2" id="route_fields">
+            <div class="field full">
+              <label>Точки маршрута</label>
+              <div id="waypoint_list" class="waypoint-list"></div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field full">
+              <label for="mission_id">ID миссии</label>
+              <input id="mission_id" placeholder="Появится после отправки" readonly>
+            </div>
+          </div>
+
+          <div class="button-row" id="route_actions" style="margin-top: 10px;">
+            <button class="ghost" id="add_waypoint_btn" type="button">Добавить точку</button>
+            <button id="submit_task_btn" type="button">Отправить</button>
+          </div>
+          <div class="button-row is-hidden" id="assign_actions" style="margin-top: 10px;">
+            <button class="secondary" id="assign_task_btn" type="button">Назначить</button>
+            <button class="ghost" id="get_mission_btn" type="button">Получить миссию</button>
+          </div>
+          <div class="button-row is-hidden" id="start_actions" style="margin-top: 10px;">
+            <button class="ghost" id="start_task_btn" type="button">Запустить</button>
+            <button class="ghost" id="get_mission_after_assign_btn" type="button">Получить миссию</button>
+          </div>
+          <div class="button-row is-hidden" id="after_start_actions" style="margin-top: 10px;">
+            <button class="ghost" id="track_external_btn" type="button">Отслеживать Во Внешнем Интерфейсе</button>
+            <button class="secondary" id="restart_flow_btn" type="button">Начать Сначала</button>
+          </div>
+          <div class="hint" id="flow_hint" style="margin-top: 10px;">
+            Шаг 1 из 4: настройте маршрут и отправьте миссию.
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <div class="workspace-top">
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Сводка Полета</div>
+            <div class="panel-meta">Краткое представление для оператора</div>
+          </div>
+          <div class="panel-body">
+            <div class="status-row">
+              <div class="metric">
+                <div class="metric-label">Дрон</div>
+                <div class="metric-value" id="metric_drone">не задан</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">Миссия</div>
+                <div class="metric-value" id="metric_mission">не задана</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">Точки</div>
+                <div class="metric-value" id="metric_waypoints">3</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Состояние Системы</div>
+            <div class="panel-meta">Текущее состояние сценария</div>
+          </div>
+          <div class="panel-body">
+            <div class="status-strip">
+              <span class="status-dot" id="status_dot"></span>
+              <span class="status-text" id="status_text">Ожидание действия</span>
+              <span class="status-help">Следуйте пошаговому сценарию слева</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel map-wrap">
+        <div class="panel-header">
+          <div class="panel-title">Карта</div>
+          <div class="panel-meta">Клик добавляет точку, перетаскивание уточняет маршрут</div>
+        </div>
+        <div class="map-toolbar">
+          <button class="ghost" id="fit_route_btn" type="button">Показать Весь Маршрут</button>
+          <button class="ghost" id="clear_route_btn" type="button">Сбросить Маршрут</button>
+          <div class="hint">OpenStreetMap + Leaflet</div>
+        </div>
+        <div id="map"></div>
+      </section>
+    </section>
+  </div>
+</section>

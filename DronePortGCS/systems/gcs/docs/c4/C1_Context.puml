@@ -1,0 +1,12 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+LAYOUT_LEFT_RIGHT()
+
+System_Ext(operator_system, "Эксплуатант", "Ставит задачи, назначает миссию на дрона и запускает ее")
+System(gcs, "НУС (Ground Control Station)", "Планирует маршрут, сохраняет миссии, готовит WPL и отправляет полетные команды")
+System_Ext(drone, "Дрон", "Получает миссию, запускает выполнение и отдает телеметрию по запросу")
+
+Rel(operator_system, gcs, "task.submit / task.assign / task.start")
+Rel(gcs, drone, "drone.upload_mission / drone.mission.start / telemetry.get")
+
+@enduml

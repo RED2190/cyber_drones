@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Панель управления</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    >
+    <link rel="stylesheet" href="{{ url_for('static', filename='web/css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='web/css/nus.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='web/css/drone.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='web/css/droneport.css') }}">
+  </head>
+  <body>
+    <div class="shell" id="shell">
+      {% include "web/partials/sidebar.html" %}
+
+      <div class="shell-main">
+        <header class="content-bar">
+          <div class="content-bar-left">
+            <button class="sidebar-toggle" id="sidebar_toggle" type="button" aria-label="Свернуть меню">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+            <div>
+              <div class="content-title" id="current_page_title">Полетные данные</div>
+              <div class="content-meta" id="current_page_meta">НУС</div>
+            </div>
+          </div>
+          <div class="content-bar-right is-hidden" id="droneport_header_status">
+            <div class="droneport-header-status">
+              <span class="droneport-health-label">Статус</span>
+              <span class="droneport-health-value" id="droneport_health_text">unknown</span>
+            </div>
+            <button id="btn-droneport-status" type="button">Обновить</button>
+          </div>
+        </header>
+
+        <main class="app">
+          {% include "web/partials/pages/flight.html" %}
+          {% include "web/partials/pages/tracking.html" %}
+          {% include "web/partials/pages/schemes.html" %}
+          {% include "web/partials/pages/security.html" %}
+          {% include "web/partials/pages/droneport.html" %}
+          {% include "web/partials/pages/status.html" %}
+          {% include "web/partials/pages/help.html" %}
+        </main>
+
+        <button
+          class="help-fab"
+          type="button"
+          data-page-target="help_page"
+          data-page-title="Справка"
+          data-page-meta="Памятка по работе с интерфейсом"
+          aria-label="Открыть справку"
+        >
+          ?
+        </button>
+      </div>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="{{ url_for('static', filename='web/js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='web/js/nus.js') }}"></script>
+    <script src="{{ url_for('static', filename='web/js/drone.js') }}"></script>
+    <script src="{{ url_for('static', filename='web/js/droneport.js') }}"></script>
+  </body>
+</html>

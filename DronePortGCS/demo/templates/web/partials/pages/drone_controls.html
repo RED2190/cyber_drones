@@ -1,0 +1,65 @@
+<section class="page" id="drone_controls_page">
+  <div class="page-grid">
+    <aside class="sidebar">
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Дрон</div>
+          <div class="panel-meta">Команды и служебные параметры</div>
+        </div>
+        <div class="panel-body">
+          <div class="field">
+            <label for="control_drone_id">ID дрона</label>
+            <input id="control_drone_id" placeholder="Берется из поля ID дрона">
+          </div>
+          <div class="field" style="margin-top: 10px;">
+            <label for="control_drone_model">Модель</label>
+            <input id="control_drone_model" value="DemoCopter-X">
+          </div>
+          <div class="field" style="margin-top: 10px;">
+            <label for="control_battery">Уровень батареи для зарядки</label>
+            <input id="control_battery" type="number" min="0" max="100" step="1" value="30">
+          </div>
+          <div class="button-grid" style="margin-top: 12px;">
+            <button class="ghost" id="charging_btn" type="button">Зарядка</button>
+            <button class="ghost" id="drone_state_btn" type="button">Состояние</button>
+          </div>
+          <div class="button-row" style="margin-top: 10px;">
+            <button class="ghost" id="drone_snapshot_btn" type="button">Снимок состояния</button>
+            <button class="ghost" id="open_tracking_btn" type="button">Открыть телеметрию</button>
+          </div>
+          <div class="hint" style="margin-top: 10px;">
+            Взлет и посадка выполняются только через сценарий миссии в разделе "НУС". В этом разделе доступны зарядка, состояние и телеметрия борта.
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Результат Команды</div>
+          <div class="panel-meta">Последний ответ API по управлению дроном</div>
+        </div>
+        <div class="panel-body">
+          <div id="drone_action_output" class="message-box">
+            Выберите команду слева, чтобы отправить действие дрону.
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Подсказка По Сценарию</div>
+          <div class="panel-meta">Как разделить операции по системам</div>
+        </div>
+        <div class="panel-body">
+          <div class="message-box">
+Команды полета и состояние борта собраны в разделе "Дрон".
+Маршрут, миссия и архитектурные материалы находятся в разделе "НУС".
+Порты, реестр и сервисы дронопорта вынесены в отдельный раздел "Дронопорт".
+          </div>
+        </div>
+      </section>
+    </section>
+  </div>
+</section>

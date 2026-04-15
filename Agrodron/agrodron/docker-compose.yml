@@ -1,0 +1,192 @@
+# Docker Compose для AgroDron.
+# Только сервисы компонентов. Брокер добавляется scripts/prepare_system.py из docker/docker-compose.yml
+
+x-common-env: &common-env
+  TOPIC_VERSION: ${TOPIC_VERSION:-v1}
+  SYSTEM_NAME: ${SYSTEM_NAME:-Agrodron}
+  INSTANCE_ID: ${INSTANCE_ID:-Agrodron001}
+  # Пул потоков обработки входящих MQTT-сообщений (в т.ч. proxy_request к МБ). Мало потоков → очередь и таймауты при нагрузке.
+  MQTT_BUS_CALLBACK_WORKERS: ${MQTT_BUS_CALLBACK_WORKERS:-32}
+  BROKER_TYPE: ${BROKER_TYPE:-mqtt}
+  MQTT_BROKER: ${MQTT_BROKER:-mosquitto}
+  MQTT_PORT: ${MQTT_PORT:-1883}
+  KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+  BROKER_USER: ${ADMIN_USER:-admin}
+  BROKER_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+  PYTHONUNBUFFERED: 1
+  ORVD_TOPIC: ${ORVD_TOPIC:-}
+  NUS_TOPIC: ${NUS_TOPIC:-}
+  DRONEPORT_TOPIC: ${DRONEPORT_TOPIC:-}
+  SITL_TOPIC: ${SITL_TOPIC:-}
+  SITL_COMMANDS_TOPIC: ${SITL_COMMANDS_TOPIC:-}
+  SITL_TELEMETRY_REQUEST_TOPIC: ${SITL_TELEMETRY_REQUEST_TOPIC:-}
+
+services:
+  security_monitor:
+    build:
+      context: ..
+      dockerfile: agrodron/components/security_monitor/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      <<: *common-env
+      COMPONENT_ID: ${SECURITY_MONITOR_COMPONENT_ID:-security_monitor}
+      POLICY_ADMIN_SENDER: ${SECURITY_MONITOR_POLICY_ADMIN_SENDER:-}
+      SECURITY_POLICIES: ${SECURITY_MONITOR_SECURITY_POLICIES:-}
+      SECURITY_MONITOR_PROXY_REQUEST_TIMEOUT_S: ${SECURITY_MONITOR_SECURITY_MONITOR_PROXY_REQUEST_TIMEOUT_S:-10.0}
+    networks: [drones_net]
+    restart: unless-stopped
+
+  journal:
+    build:
+      context: ..
+      dockerfile: agrodron/components/journal/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      <<: *common-env
+      COMPONENT_ID: ${JOURNAL_COMPONENT_ID:-journal}
+    networks: [drones_net]
+    restart: unless-stopped
+
+  navigation:
+    build:
+      context: ..
+      dockerfile: agrodron/components/navigation/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      <<: *common-env
+      COMPONENT_ID: ${NAVIGATION_COMPONENT_ID:-navigation}
+      NAVIGATION_POLL_INTERVAL_S: ${NAVIGATION_NAVIGATION_POLL_INTERVAL_S:-0.1}
+      NAVIGATION_REQUEST_TIMEOUT_S: ${NAVIGATION_NAVIGATION_REQUEST_TIMEOUT_S:-1.0}
+      SITL_DRONE_ID: ${NAVIGATION_SITL_DRONE_ID:-drone_001}
+    networks: [drones_net]
+    restart: unless-stopped
+
+  autopilot:
+    build:
+      context: ..
+      dockerfile: agrodron/components/autopilot/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      <<: *common-env
+      COMPONENT_ID: ${AUTOPILOT_COMPONENT_ID:-autopilot}
+      AUTOPILOT_CONTROL_INTERVAL_S: ${AUTOPILOT_AUTOPILOT_CONTROL_INTERVAL_S:-0.2}
+      AUTOPILOT_NAV_POLL_INTERVAL_S: ${AUTOPILOT_AUTOPILOT_NAV_POLL_INTERVAL_S:-0.2}
+      AUTOPILOT_REQUEST_TIMEOUT_S: ${AUTOPILOT_AUTOPILOT_REQUEST_TIMEOUT_S:-2.0}
+      # 1/true — не слать request_takeoff на ORVD_TOPIC, считать ответ ОРВД успешным (стенд без внешнего ОРВД)
+      AUTOPILOT_ORVD_MOCK_SUCCESS: ${AUTOPILOT_AUTOPILOT_ORVD_MOCK_SUCCESS:-0}
+      # 1/true — не слать request_takeoff/landing/charging на DRONEPORT_TOPIC (стенд без внешнего Дронопорта)
+      AUTOPILOT_DRONEPORT_MOCK_SUCCESS: ${AUTOPILOT_AUTOPILOT_DRONEPORT_MOCK_SUCCESS:-0}
+    networks: [drones_net]
+    restart: unless-stopped
+
+  limiter:
+    build:
+      context: ..
+      dockerfile: agrodron/components/limiter/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      <<: *common-env
+      COMPONENT_ID: ${LIMITER_COMPONENT_ID:-limiter}
+      LIMITER_CONTROL_INTERVAL_S: ${LIMITER_LIMITER_CONTROL_INTERVAL_S:-0.5}
+      LIMITER_NAV_POLL_INTERVAL_S: ${LIMITER_LIMITER_NAV_POLL_INTERVAL_S:-0.5}
+      LIMITER_TELEMETRY_POLL_INTERVAL_S: ${LIMITER_LIMITER_TELEMETRY_POLL_INTERVAL_S:-1.0}
+      LIMITER_REQUEST_TIMEOUT_S: ${LIMITER_LIMITER_REQUEST_TIMEOUT_S:-2.0}
+      LIMITER_MAX_DISTANCE_FROM_PATH_M: ${LIMITER_LIMITER_MAX_DISTANCE_FROM_PATH_M:-10.0}
+      LIMITER_MAX_ALT_DEVIATION_M: ${LIMITER_LIMITER_MAX_ALT_DEVIATION_M:-3.0}
+    networks: [drones_net]
+    restart: unless-stopped
+
+  emergensy:
+    build:
+      context: ..
+      dockerfile: agrodron/components/emergensy/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      <<: *common-env
+      COMPONENT_ID: ${EMERGENSY_COMPONENT_ID:-emergensy}
+      EMERGENSY_PUBLISH_TIMEOUT_S: ${EMERGENSY_EMERGENSY_PUBLISH_TIMEOUT_S:-1.0}
+    networks: [drones_net]
+    restart: unless-stopped
+
+  mission_handler:
+    build:
+      context: ..
+      dockerfile: agrodron/components/mission_handler/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      <<: *common-env
+      COMPONENT_ID: ${MISSION_HANDLER_COMPONENT_ID:-mission_handler}
+      MISSION_HANDLER_REQUEST_TIMEOUT_S: ${MISSION_HANDLER_MISSION_HANDLER_REQUEST_TIMEOUT_S:-10.0}
+      SITL_DRONE_ID: ${MISSION_HANDLER_SITL_DRONE_ID:-drone_001}
+    networks: [drones_net]
+    restart: unless-stopped
+
+  motors:
+    build:
+      context: ..
+      dockerfile: agrodron/components/motors/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      <<: *common-env
+      COMPONENT_ID: ${MOTORS_COMPONENT_ID:-motors}
+      SITL_MODE: ${MOTORS_SITL_MODE:-mock}
+      SITL_DRONE_ID: ${MOTORS_SITL_DRONE_ID:-drone_001}
+      MOTORS_TEMPERATURE_C_DEFAULT: ${MOTORS_MOTORS_TEMPERATURE_C_DEFAULT:-55.0}
+    networks: [drones_net]
+    restart: unless-stopped
+
+  sprayer:
+    build:
+      context: ..
+      dockerfile: agrodron/components/sprayer/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      <<: *common-env
+      COMPONENT_ID: ${SPRAYER_COMPONENT_ID:-sprayer}
+      SITL_MODE: ${SPRAYER_SITL_MODE:-mock}
+      SPRAYER_TEMPERATURE_C_DEFAULT: ${SPRAYER_SPRAYER_TEMPERATURE_C_DEFAULT:-40.0}
+      SPRAYER_TANK_LEVEL_PCT_DEFAULT: ${SPRAYER_SPRAYER_TANK_LEVEL_PCT_DEFAULT:-75.0}
+    networks: [drones_net]
+    restart: unless-stopped
+
+  telemetry:
+    build:
+      context: ..
+      dockerfile: agrodron/components/telemetry/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      <<: *common-env
+      COMPONENT_ID: ${TELEMETRY_COMPONENT_ID:-telemetry}
+      TELEMETRY_POLL_INTERVAL_S: ${TELEMETRY_TELEMETRY_POLL_INTERVAL_S:-0.5}
+      TELEMETRY_REQUEST_TIMEOUT_S: ${TELEMETRY_TELEMETRY_REQUEST_TIMEOUT_S:-6.0}
+    networks: [drones_net]
+    restart: unless-stopped
+
+  system_monitor:
+    build:
+      context: ..
+      dockerfile: agrodron/components/system_monitor/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      <<: *common-env
+      COMPONENT_ID: ${SYSTEM_MONITOR_COMPONENT_ID:-system_monitor}
+      SYSTEM_MONITOR_HTTP: ${SYSTEM_MONITOR_SYSTEM_MONITOR_HTTP:-1}
+      SYSTEM_MONITOR_HTTP_PORT: ${SYSTEM_MONITOR_SYSTEM_MONITOR_HTTP_PORT:-8090}
+      # Должен быть ≥ таймаута прокси МБ (цепочка telemetry→motors/…), иначе снимок будет пустым
+      SYSTEM_MONITOR_TELEMETRY_TIMEOUT_S: ${SYSTEM_MONITOR_SYSTEM_MONITOR_TELEMETRY_TIMEOUT_S:-15.0}
+    ports:
+      - "${SYSTEM_MONITOR_HOST_PORT:-8090}:${SYSTEM_MONITOR_SYSTEM_MONITOR_HTTP_PORT:-8090}"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:$${SYSTEM_MONITOR_HTTP_PORT}/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks: [drones_net]
+    restart: unless-stopped
+
+networks:
+  drones_net:
+    external: true
+    name: ${DOCKER_NETWORK:-drones_net}
+
