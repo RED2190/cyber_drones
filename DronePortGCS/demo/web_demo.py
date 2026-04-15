@@ -374,7 +374,7 @@ def index():
     remote_security_analysis = _read_git_file("origin/security-analysis", "docs/GCS_SECURITY_ANALYSIS.md")
     security_analysis = _parse_security_analysis(remote_security_analysis)
     return render_template(
-        "web_demo.html",
+        "web/index.html",
         diagrams=diagrams,
         security_artifacts=security_artifacts,
         security_analysis=security_analysis,
