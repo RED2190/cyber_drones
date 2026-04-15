@@ -9,10 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY config/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY . /app/systems/agrodron
 
-ENV PYTHONPATH=/app/agrodron
+ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "-m", "components.limiter"]
+CMD ["python", "-m", "systems.agrodron.src.limiter"]
 

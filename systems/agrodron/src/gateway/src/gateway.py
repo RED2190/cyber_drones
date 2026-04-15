@@ -8,14 +8,18 @@ from typing import Any, Dict, Optional, Tuple
 from systems.agrodron.src.broker.system_bus import SystemBus
 from systems.agrodron.src.sdk.base_system import BaseSystem
 
-from src.gateway.topics import ComponentTopics, GatewayActions, SystemTopics
+from systems.agrodron.src.gateway.topics import ComponentTopics, GatewayActions, SystemTopics
 
 
 class AgrodronGateway(BaseSystem):
     PROXY_TIMEOUT_S = 10.0
 
     def __init__(self, system_id: str, bus: SystemBus, health_port: Optional[int] = None):
-        self._external_sender = os.environ.get("AGRODRON_GATEWAY_SENDER") or os.environ.get("NUS_TOPIC") or "gateway"
+        self._default_sender = (
+            os.environ.get("AGRODRON_GATEWAY_SENDER")
+            or os.environ.get("NUS_TOPIC")
+            or "gateway"
+        )
         super().__init__(
             system_id=system_id,
             system_type="agrodron",
@@ -30,10 +34,20 @@ class AgrodronGateway(BaseSystem):
         self.register_handler(GatewayActions.CMD, self._handle_cmd)
         self.register_handler(GatewayActions.GET_STATE, self._handle_get_state)
 
-    def _proxy_request(self, target_topic: str, target_action: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_sender(self, message: Dict[str, Any]) -> str:
+        sender = str(message.get("sender") or "").strip()
+        return sender or self._default_sender
+
+    def _proxy_request(
+        self,
+        source_sender: str,
+        target_topic: str,
+        target_action: str,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
         message = {
             "action": "proxy_request",
-            "sender": self._external_sender,
+            "sender": source_sender,
             "payload": {
                 "target": {
                     "topic": target_topic,
@@ -72,7 +86,9 @@ class AgrodronGateway(BaseSystem):
     def _handle_load_mission(self, message: Dict[str, Any]) -> Dict[str, Any]:
         payload = message.get("payload") or {}
         mission_id, wpl_content = self._extract_mission_payload(payload)
+        source_sender = self._extract_sender(message)
         response = self._proxy_request(
+            source_sender,
             ComponentTopics.MISSION_HANDLER,
             GatewayActions.LOAD_MISSION,
             {
@@ -84,7 +100,9 @@ class AgrodronGateway(BaseSystem):
 
     def _handle_validate_only(self, message: Dict[str, Any]) -> Dict[str, Any]:
         payload = message.get("payload") or {}
+        source_sender = self._extract_sender(message)
         response = self._proxy_request(
+            source_sender,
             ComponentTopics.MISSION_HANDLER,
             GatewayActions.VALIDATE_ONLY,
             {
@@ -96,7 +114,9 @@ class AgrodronGateway(BaseSystem):
 
     def _handle_cmd(self, message: Dict[str, Any]) -> Dict[str, Any]:
         payload = message.get("payload") or {}
+        source_sender = self._extract_sender(message)
         response = self._proxy_request(
+            source_sender,
             ComponentTopics.AUTOPILOT,
             GatewayActions.CMD,
             {
@@ -106,8 +126,9 @@ class AgrodronGateway(BaseSystem):
         return self._unwrap_target_response(response)
 
     def _handle_get_state(self, message: Dict[str, Any]) -> Dict[str, Any]:
-        _ = message
+        source_sender = self._extract_sender(message)
         response = self._proxy_request(
+            source_sender,
             ComponentTopics.TELEMETRY,
             GatewayActions.GET_STATE,
             {},

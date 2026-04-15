@@ -9,12 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY config/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY . /app/systems/agrodron
 
-ENV PYTHONPATH=/app/agrodron
+ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # Порт должен совпадать с SYSTEM_MONITOR_HTTP_PORT (по умолчанию 8090)
 EXPOSE 8090
 
-CMD ["python", "-m", "components.system_monitor"]
+CMD ["python", "-m", "systems.agrodron.src.system_monitor"]
