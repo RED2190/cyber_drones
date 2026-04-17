@@ -1,5 +1,5 @@
 """Тесты распаковки ответа navigation get_state."""
-from systems.agrodron.src.sdk.proxy_reply import extract_navigation_nav_state_from_target_response
+from systems.agrodron.src.common.proxy_reply import extract_navigation_nav_state_from_target_response
 
 
 def test_extract_from_create_response_shape():

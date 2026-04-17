@@ -7,7 +7,7 @@ import signal
 import sys
 import time
 
-from systems.agrodron.src.broker.bus_factory import create_system_bus
+from broker.bus_factory import create_system_bus
 from systems.agrodron.src.limiter import config
 from systems.agrodron.src.limiter.src.limiter import LimiterComponent
 

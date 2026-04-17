@@ -1,6 +1,6 @@
 """Unit-тесты компонента motors."""
 import asyncio
-from systems.agrodron.src.broker.system_bus import SystemBus
+from broker.system_bus import SystemBus
 from systems.agrodron.src.motors.src.motors import MotorsComponent, MotorsMode
 from systems.agrodron.src.motors import config
 

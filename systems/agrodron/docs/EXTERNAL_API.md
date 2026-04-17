@@ -4,9 +4,9 @@
 
 **Компоненты дрона** используют схему `v1.{SystemName}.{InstanceID}.{component}` (например `v1.Agrodron.Agrodron001.mission_handler`). Задаётся через `TOPIC_VERSION`, `SYSTEM_NAME`, `INSTANCE_ID`.
 
-**Внешние системы** подключаются **не** по этой схеме: их адреса в брокере — произвольные строки из `agrodron/.env`. В репозитории заданы такие значения по умолчанию:
+**Внешние системы** подключаются **не** по этой схеме: их адреса в брокере — произвольные строки из `systems/agrodron/.env`. В репозитории заданы такие значения по умолчанию:
 
-| Переменная | Пример значения в `agrodron/.env` |
+| Переменная | Пример значения в `systems/agrodron/.env` |
 |------------|-----------------------------------|
 | `NUS_TOPIC` | `v1.gcs.1.drone_manager` |
 | `ORVD_TOPIC` | `v1.ORVD.ORVD001.main` |
@@ -152,7 +152,7 @@
 
 **Топик**: `ORVD_TOPIC` (в репозитории: `v1.ORVD.ORVD001.main`).
 
-Для стенда без реального сервиса на `ORVD_TOPIC` в автопилоте можно включить **`AUTOPILOT_ORVD_MOCK_SUCCESS`** (`1`, `true`, `yes` или `on`): запрос `request_takeoff` по шине **не выполняется**, автопилот считает, что получен ответ **`takeoff_authorized`**, в журнал уходит `ORVD_TAKEOFF_APPROVED` с полями `stub: true` и `reason: AUTOPILOT_ORVD_MOCK_SUCCESS`. В `agrodron/docker-compose.yml` переменная пробрасывается как `AUTOPILOT_ORVD_MOCK_SUCCESS` (источник в merged `.env`: `AUTOPILOT_AUTOPILOT_ORVD_MOCK_SUCCESS`).
+Для стенда без реального сервиса на `ORVD_TOPIC` в автопилоте можно включить **`AUTOPILOT_ORVD_MOCK_SUCCESS`** (`1`, `true`, `yes` или `on`): запрос `request_takeoff` по шине **не выполняется**, автопилот считает, что получен ответ **`takeoff_authorized`**, в журнал уходит `ORVD_TAKEOFF_APPROVED` с полями `stub: true` и `reason: AUTOPILOT_ORVD_MOCK_SUCCESS`. В `systems/agrodron/docker-compose.yml` переменная пробрасывается как `AUTOPILOT_ORVD_MOCK_SUCCESS` (источник в merged `.env`: `AUTOPILOT_AUTOPILOT_ORVD_MOCK_SUCCESS`).
 
 ### Действия дрон → ОРВД
 
@@ -172,7 +172,7 @@
 }
 ```
 
-`drone_id` в коде берётся из `INSTANCE_ID` системы (см. `agrodron/.env`).
+`drone_id` в коде берётся из `INSTANCE_ID` системы (см. `systems/agrodron/.env`).
 
 Ожидаемый ответ:
 

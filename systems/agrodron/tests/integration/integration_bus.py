@@ -2,7 +2,7 @@
 import threading
 from typing import Any, Callable, Dict, Optional
 
-from systems.agrodron.src.broker.system_bus import SystemBus
+from broker.system_bus import SystemBus
 
 
 class IntegrationBus(SystemBus):

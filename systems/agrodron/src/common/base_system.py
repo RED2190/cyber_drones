@@ -15,8 +15,8 @@ import sys
 
 from flask import Flask, jsonify
 
-from systems.agrodron.src.broker.system_bus import SystemBus
-from systems.agrodron.src.sdk.messages import create_response
+from broker.system_bus import SystemBus
+from sdk.messages import create_response
 
 
 class BaseSystem(ABC):

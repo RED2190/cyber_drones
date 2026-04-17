@@ -1,7 +1,7 @@
 .PHONY: docker-build docker-up unit-test
 
-PIPENV_PIPFILE = ../../config/Pipfile
-PYTEST_CONFIG = ../../config/pyproject.toml
+PIPENV_PIPFILE = ../../../../config/Pipfile
+PYTEST_CONFIG = ../../../../config/pyproject.toml
 
 docker-build:
 	@docker build -t security_monitor -f docker/Dockerfile ../..

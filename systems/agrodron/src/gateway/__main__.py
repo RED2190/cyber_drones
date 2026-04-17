@@ -2,8 +2,8 @@
 
 import os
 
-from systems.agrodron.src.broker.bus_factory import create_system_bus
-from src.gateway.src.gateway import AgrodronGateway
+from broker.bus_factory import create_system_bus
+from systems.agrodron.src.gateway.src.gateway import AgrodronGateway
 
 
 def main():

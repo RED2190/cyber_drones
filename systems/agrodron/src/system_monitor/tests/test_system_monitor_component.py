@@ -5,11 +5,11 @@ import asyncio
 from typing import Any, Callable, Dict, Optional
 
 import pytest
-from systems.agrodron.src.broker.system_bus import SystemBus
+from broker.system_bus import SystemBus
 from systems.agrodron.src.system_monitor import config
 from systems.agrodron.src.system_monitor.src.system_monitor import SystemMonitorComponent
-from systems.agrodron.src.sdk.proxy_reply import unwrap_proxy_target_response
-from systems.agrodron.src.sdk.topic_utils import topic_for
+from systems.agrodron.src.common.proxy_reply import unwrap_proxy_target_response
+from systems.agrodron.src.common.topic_utils import topic_for
 
 
 @pytest.fixture(autouse=True)

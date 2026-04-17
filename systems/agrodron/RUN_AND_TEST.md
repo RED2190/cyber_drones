@@ -20,7 +20,7 @@ cd ..
 
 ## 1. Поднять систему (Docker)
 
-Все компоненты уже имеют рабочие `.env` в `agrodron/components/<component>/.env` с топиками `agrodron.*`. Генератор собирает из них общий `.generated/.env` и единый `docker-compose`.
+Все компоненты уже имеют рабочие `.env` в `systems/agrodron/src/<component>/.env` с топиками `agrodron.*`. Генератор собирает из них общий `.generated/.env` и единый `docker-compose`.
 
 ### 1.1. Выбор брокера
 
@@ -34,13 +34,13 @@ cd ..
 ### 1.2. Запуск из каталога `agrodron`
 
 ```bash
-cd agrodron
+cd systems/agrodron
 make docker-up
 ```
 
 Эта команда:
 
-1. Выполняет **prepare** — скрипт `scripts/prepare_system.py agrodron` читает `.env` из каждого компонента в `agrodron/components/`, собирает общий `agrodron/.generated/docker-compose.yml` и `agrodron/.generated/.env`.
+1. Выполняет **prepare** — скрипт `scripts/prepare_system.py agrodron` читает `.env` из каждого компонента в `systems/agrodron/src/`, собирает общий `systems/agrodron/.generated/docker-compose.yml` и `systems/agrodron/.generated/.env`.
 2. Поднимает брокер (Kafka или Mosquitto) и все сервисы системы с профилем `kafka` или `mqtt`.
 
 Эквивалент вручную (без make):
@@ -67,7 +67,7 @@ docker ps
 **Все контейнеры разом:**
 
 ```bash
-cd agrodron
+cd systems/agrodron
 make docker-logs
 ```
 
@@ -77,14 +77,14 @@ make docker-logs
 
 1. Поднимите систему и **не останавливайте** контейнеры:
    ```bash
-   cd agrodron
+   cd systems/agrodron
    make docker-up
    # подождите ~45 с
    ```
 
 2. В **другом терминале** включите просмотр логов нужного сервиса:
    ```bash
-   cd agrodron
+   cd systems/agrodron
    make docker-logs-sm      # только security_monitor (входящие proxy_request, ответы/таймауты)
    # или
    make docker-logs-motors  # только motors (входящие запросы, отправка ответа)
@@ -92,7 +92,7 @@ make docker-logs
 
 3. В **первом терминале** запустите интеграционные тесты:
    ```bash
-   cd agrodron
+   cd systems/agrodron
    set -a && . .generated/.env && set +a
    export MQTT_BROKER=localhost MQTT_PORT=1883 BROKER_TYPE=mqtt BROKER_USER=admin BROKER_PASSWORD=admin_secret_123
    pipenv run pytest -c ../config/pyproject.toml tests/test_full_system_run.py tests/test_integration.py -v -s
@@ -135,7 +135,7 @@ docker compose -f .generated/docker-compose.yml --env-file .generated/.env --pro
 **Важно:** после изменения `.generated/.env` (например после `make prepare` или правок политик) контейнеры продолжают работать со **старым** окружением. Чтобы применить новый `.env`, нужно перезапустить стек:
 
 ```bash
-cd agrodron
+cd systems/agrodron
 make docker-down
 make docker-up
 # подождать ~45 с, затем запускать тесты или смотреть логи
@@ -144,7 +144,7 @@ make docker-up
 ### 1.5. Остановка
 
 ```bash
-cd agrodron
+cd systems/agrodron
 make docker-down
 ```
 
@@ -164,7 +164,7 @@ docker compose -f .generated/docker-compose.yml --env-file .generated/.env --pro
 ### 2.1. Проверка окружения для тестов
 
 ```bash
-cd agrodron
+cd systems/agrodron
 make check-tools
 ```
 
@@ -172,17 +172,17 @@ make check-tools
 
 ### 2.2. Unit-тесты (без Docker)
 
-Тесты компонентов лежат в `agrodron/components/*/tests/`.
+Тесты компонентов лежат в `systems/agrodron/src/*/tests/`.
 
 ```bash
-cd agrodron
+cd systems/agrodron
 make unit-test
 ```
 
 Эквивалент вручную:
 
 ```bash
-cd agrodron
+cd systems/agrodron
 PIPENV_PIPFILE=../config/Pipfile pipenv run pytest -c ../config/pyproject.toml components -vv -rA -s
 ```
 
@@ -200,7 +200,7 @@ PIPENV_PIPFILE=../config/Pipfile pipenv run pytest -c ../config/pyproject.toml c
 Сначала поднимается вся система, затем запускается один интеграционный тест-файл:
 
 ```bash
-cd agrodron
+cd systems/agrodron
 make integration-test
 ```
 
@@ -211,12 +211,12 @@ make integration-test
 3. Запуск: `pytest -c ../config/pyproject.toml tests/test_integration.py -vv -rA -s`
 4. `make docker-down`
 
-Если файла `agrodron/tests/test_integration.py` ещё нет, эта цель будет падать. В таком случае ограничьтесь unit-тестами: `make unit-test`.
+Если файла `systems/agrodron/tests/test_integration.py` ещё нет, эта цель будет падать. В таком случае ограничьтесь unit-тестами: `make unit-test`.
 
 ### 2.4. Все тесты (unit + integration)
 
 ```bash
-cd agrodron
+cd systems/agrodron
 make tests
 ```
 
@@ -239,7 +239,7 @@ make full-run
 **Только прогон тестов** (система уже поднята, например после `make docker-up`):
 
 ```bash
-cd agrodron
+cd systems/agrodron
 set -a && . .generated/.env && set +a
 make run-all
 ```
@@ -270,7 +270,7 @@ make run-all
 ## 5. Переменные окружения при запуске
 
 - **BROKER_TYPE** — `kafka` или `mqtt` (учитывается при `make docker-up` и `make docker-logs`).
-- Конфигурация компонентов берётся из их `.env` в `agrodron/components/<component>/.env` при каждом `make prepare`; итог попадает в `agrodron/.generated/.env`.
+- Конфигурация компонентов берётся из их `.env` в `systems/agrodron/src/<component>/.env` при каждом `make prepare`; итог попадает в `systems/agrodron/.generated/.env`.
 
 Если вы меняли только `.env` компонентов, достаточно снова выполнить:
 

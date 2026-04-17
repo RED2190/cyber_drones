@@ -1,4 +1,4 @@
-from systems.agrodron.src.broker.system_bus import SystemBus
+from broker.system_bus import SystemBus
 from systems.agrodron.src.mission_handler.src.mission_handler import MissionHandlerComponent
 from systems.agrodron.src.mission_handler import config
 

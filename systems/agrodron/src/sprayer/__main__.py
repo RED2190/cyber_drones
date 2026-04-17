@@ -6,7 +6,7 @@ import os
 import signal
 import sys
 
-from systems.agrodron.src.broker.bus_factory import create_system_bus
+from broker.bus_factory import create_system_bus
 from systems.agrodron.src.sprayer import config
 from systems.agrodron.src.sprayer.src.sprayer import SprayerComponent
 

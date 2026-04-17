@@ -6,8 +6,9 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
-from systems.agrodron.src.broker.system_bus import SystemBus
-from systems.agrodron.src.sdk.topic_utils import topic_for
+from broker.system_bus import SystemBus
+
+from systems.agrodron.src.common.topic_utils import topic_for
 
 logger = logging.getLogger(__name__)
 

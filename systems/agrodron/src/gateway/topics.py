@@ -2,28 +2,18 @@
 
 import os
 
+from systems.agrodron.src.common.topic_utils import topic_for
+
 
 class SystemTopics:
     AGRODRON = os.environ.get("AGRODRON_GATEWAY_TOPIC", "systems.agrodron")
 
 
 class ComponentTopics:
-    SECURITY_MONITOR = (
-        os.environ.get("SECURITY_MONITOR_TOPIC")
-        or "v1.Agrodron.Agrodron001.security_monitor"
-    )
-    MISSION_HANDLER = (
-        os.environ.get("MISSION_HANDLER_TOPIC")
-        or "v1.Agrodron.Agrodron001.mission_handler"
-    )
-    AUTOPILOT = (
-        os.environ.get("AUTOPILOT_TOPIC")
-        or "v1.Agrodron.Agrodron001.autopilot"
-    )
-    TELEMETRY = (
-        os.environ.get("TELEMETRY_TOPIC")
-        or "v1.Agrodron.Agrodron001.telemetry"
-    )
+    SECURITY_MONITOR = os.environ.get("SECURITY_MONITOR_TOPIC") or topic_for("security_monitor")
+    MISSION_HANDLER = os.environ.get("MISSION_HANDLER_TOPIC") or topic_for("mission_handler")
+    AUTOPILOT = os.environ.get("AUTOPILOT_TOPIC") or topic_for("autopilot")
+    TELEMETRY = os.environ.get("TELEMETRY_TOPIC") or topic_for("telemetry")
 
 
 class GatewayActions:

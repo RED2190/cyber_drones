@@ -4,11 +4,11 @@ import threading
 import time
 from typing import Any, Dict, Optional
 
-from systems.agrodron.src.broker.system_bus import SystemBus
-from systems.agrodron.src.sdk.base_component import BaseComponent
-from systems.agrodron.src.sdk.journal_log import publish_journal_event
-from systems.agrodron.src.sdk.proxy_reply import extract_navigation_nav_state_from_target_response
-from systems.agrodron.src.sdk.proxy_reply import unwrap_proxy_target_response
+from broker.system_bus import SystemBus
+from systems.agrodron.src.common.base_component import BaseComponent
+from systems.agrodron.src.common.journal_log import publish_journal_event
+from systems.agrodron.src.common.proxy_reply import extract_navigation_nav_state_from_target_response
+from systems.agrodron.src.common.proxy_reply import unwrap_proxy_target_response
 
 from systems.agrodron.src.telemetry import config
 

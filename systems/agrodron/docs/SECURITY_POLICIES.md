@@ -1,7 +1,7 @@
 # Политики монитора безопасности (МБ)
 
-Источник: `agrodron/components/security_monitor/.env`, переменная `SECURITY_POLICIES`.
-После `make prepare` значение попадает в `agrodron/.generated/.env` как `SECURITY_MONITOR_SECURITY_POLICIES` с раскрытыми подстановками.
+Источник: `systems/agrodron/src/security_monitor/.env`, переменная `SECURITY_POLICIES`.
+После `make prepare` значение попадает в `systems/agrodron/.generated/.env` как `SECURITY_MONITOR_SECURITY_POLICIES` с раскрытыми подстановками.
 
 Подстановка **`${SYSTEM_NAME}`** в коде МБ и в `prepare_system` — это **полный префикс топика** `v1.{SYSTEM_NAME}.{INSTANCE_ID}` (функция `topic_prefix()`), а не только короткое имя системы. Иначе в политиках получались строки вида `Agrodron.telemetry` вместо `v1.Agrodron.Agrodron001.telemetry`, и `sender` реальных сообщений не совпадал с таблицей — запросы к telemetry (и снимок в system_monitor) отклонялись или «висели» до таймаута.
 
@@ -53,7 +53,7 @@
 | 35 | `${ORVD_TOPIC}` | `${SYSTEM_NAME}.telemetry` | `get_state` |
 | 36 | `${ORVD_TOPIC}` | `${SYSTEM_NAME}.autopilot` | `cmd` |
 
-### То же после подстановок (типичный `agrodron/.generated/.env`)
+### То же после подстановок (типичный `systems/agrodron/.generated/.env`)
 
 | № | sender | topic | action |
 |---|--------|-------|--------|

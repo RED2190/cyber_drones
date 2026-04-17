@@ -1,9 +1,9 @@
 .PHONY: help prepare unit-test integration-test test docker-up docker-up-components docker-down docker-logs docker-logs-% docker-ps status monitor-help
 
 # Все команды pipenv/pytest выполняются из каталога systems/agrodron.
-PIPENV       = PIPENV_PIPFILE=config/Pipfile pipenv
+PIPENV       = PIPENV_PIPFILE=$(REPO_ROOT)/config/Pipfile pipenv
 REPO_ROOT    = $(abspath ../..)
-PYTEST       = PYTHONPATH=$(REPO_ROOT):$$PYTHONPATH $(PIPENV) run pytest -c config/pyproject.toml
+PYTEST       = PYTHONPATH=$(REPO_ROOT):$$PYTHONPATH $(PIPENV) run pytest -c $(REPO_ROOT)/config/pyproject.toml
 GENERATED    = .generated
 COMPOSE      = docker compose -f $(GENERATED)/docker-compose.yml --env-file $(GENERATED)/.env
 BROKER       = $${BROKER_TYPE:-mqtt}

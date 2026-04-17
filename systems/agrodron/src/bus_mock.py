@@ -2,7 +2,7 @@
 import asyncio
 from typing import Any, Dict, Callable, Optional
 
-from systems.agrodron.src.broker.system_bus import SystemBus
+from broker.system_bus import SystemBus
 
 
 class MockSystemBus(SystemBus):

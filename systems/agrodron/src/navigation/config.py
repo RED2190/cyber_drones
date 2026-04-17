@@ -6,7 +6,7 @@ SITL опрашивается по шине (request к топику SITL-ада
 import os
 from typing import Optional
 
-from systems.agrodron.src.sdk.topic_utils import instance_id, topic_for
+from systems.agrodron.src.common.topic_utils import instance_id, topic_for
 
 
 def component_topic() -> str:

@@ -1,11 +1,11 @@
 # Quick Start
 
-Брокер (Kafka/MQTT), SDK и система **AgroDron** в каталоге `agrodron/`. Сборка Docker для системы выполняется через `scripts/prepare_system.py` (см. `make prepare` в `agrodron/`).
+Брокер (Kafka/MQTT), SDK и система **AgroDron** в каталоге `systems/agrodron/`. Сборка Docker для системы выполняется через `scripts/prepare_system.py` (см. `make prepare` в `systems/agrodron/`).
 
 ## Структура
 
 ```
-agrodron/            Система AgroDron: docker-compose компонентов, Makefile, tests/
+systems/agrodron/            Система AgroDron: docker-compose компонентов, Makefile, tests/
   components/        Компоненты (autopilot, mission_handler, security_monitor, …)
   tests/integration/ Интеграционные тесты (in-process)
 broker/              SystemBus, MQTTSystemBus, KafkaSystemBus
@@ -22,20 +22,20 @@ docs/                SYSTEM.md, EXTERNAL_API.md, quick_start.md
 
 ```bash
 PIPENV_PIPFILE=config/Pipfile pipenv install
-cd agrodron && make unit-test          # только unit
-cd agrodron && make test               # unit + integration
+cd systems/agrodron && make unit-test          # только unit
+cd systems/agrodron && make test               # unit + integration
 ```
 
 Только брокер (без контейнеров AgroDron): скопируйте `docker/example.env` в `docker/.env`, затем поднимите compose из `docker/` (см. [docker/README.md](../docker/README.md)).
 
 ## Команды Makefile
 
-Корневого `Makefile` нет: все цели `make` описаны в `agrodron/Makefile`.
+Корневого `Makefile` нет: все цели `make` описаны в `systems/agrodron/Makefile`.
 
 ## AgroDron
 
 ```bash
-cd agrodron
+cd systems/agrodron
 make prepare       # Собрать .generated/
 make test          # Unit + integration тесты
 make docker-up     # Брокер + все компоненты
@@ -67,13 +67,13 @@ make docker-down   # Остановить
 
 ```bash
 cp docker/example.env docker/.env   # при необходимости скорректируйте BROKER_TYPE и пароли
-cd agrodron
-make prepare          # agrodron/.generated/docker-compose.yml и .env
+cd systems/agrodron
+make prepare          # systems/agrodron/.generated/docker-compose.yml и .env
 make docker-up        # брокер + все компоненты (профиль из BROKER_TYPE в смерженном .env)
 make docker-down
 ```
 
-Переменные `BROKER_TYPE`, `ADMIN_USER`, `ADMIN_PASSWORD` задаются в `docker/.env` и `agrodron/.env` (итог — в `agrodron/.generated/.env`). Топики: `TOPIC_VERSION`, `SYSTEM_NAME`, `INSTANCE_ID`.
+Переменные `BROKER_TYPE`, `ADMIN_USER`, `ADMIN_PASSWORD` задаются в `docker/.env` и `systems/agrodron/.env` (итог — в `systems/agrodron/.generated/.env`). Топики: `TOPIC_VERSION`, `SYSTEM_NAME`, `INSTANCE_ID`.
 
 При **MQTT** при нагрузке на монитор безопасности имеет значение размер пула обработки входящих сообщений — **`MQTT_BUS_CALLBACK_WORKERS`** (по умолчанию 32, см. [SYSTEM.md](SYSTEM.md) → раздел про MQTT и этот параметр).
 

@@ -65,14 +65,15 @@ def rewrite_volumes(volumes: list, from_dir: Path, to_dir: Path) -> list:
 
 
 def prepare_system(system_dir: str):
-    root = Path(__file__).resolve().parent.parent
-    system_path = root / system_dir
+    agrodron_root = Path(__file__).resolve().parent.parent
+    repo_root = agrodron_root.parent.parent
+    system_path = (agrodron_root / system_dir).resolve()
 
     if not system_path.is_dir():
         print(f"Error: system directory '{system_path}' not found", file=sys.stderr)
         sys.exit(1)
 
-    broker_compose_path = root / "docker" / "docker-compose.yml"
+    broker_compose_path = repo_root / "docker" / "docker-compose.yml"
     system_compose_path = system_path / "docker-compose.yml"
 
     for path, label in [
@@ -86,7 +87,10 @@ def prepare_system(system_dir: str):
     broker_compose = yaml.safe_load(broker_compose_path.read_text())
     system_compose = yaml.safe_load(system_compose_path.read_text())
 
-    root_env = parse_env_file(root / "docker" / ".env")
+    broker_env_file = repo_root / "docker" / ".env"
+    if not broker_env_file.exists():
+        broker_env_file = repo_root / "docker" / "example.env"
+    root_env = parse_env_file(broker_env_file)
     system_env = parse_env_file(system_path / ".env")
 
     # Discover components and their .env files (system components/ or src/)

@@ -7,8 +7,8 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Callable, Optional
 
-from systems.agrodron.src.broker.system_bus import SystemBus
-from systems.agrodron.src.sdk.messages import create_response
+from broker.system_bus import SystemBus
+from sdk.messages import create_response
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ class BaseComponent(ABC):
         if self.component_type == "journal":
             return
         try:
-            from systems.agrodron.src.sdk.journal_log import publish_journal_event
+            from systems.agrodron.src.common.journal_log import publish_journal_event
 
             publish_journal_event(
                 self.bus,

@@ -47,9 +47,9 @@ v1.{SystemName}.{InstanceID}.{component}
 
 ### Внешние системы
 
-Имена топиков задаются в `agrodron/.env` и **не обязаны** следовать схеме `v1.{SystemName}.{InstanceID}.{component}`.
+Имена топиков задаются в `systems/agrodron/.env` и **не обязаны** следовать схеме `v1.{SystemName}.{InstanceID}.{component}`.
 
-| Система | Пример в репозитории (`agrodron/.env`) | Переменная |
+| Система | Пример в репозитории (`systems/agrodron/.env`) | Переменная |
 |---|---|---|
 | НУС (наземная управляющая) | `v1.gcs.1.drone_manager` | `NUS_TOPIC` |
 | ОРВД (воздушное движение) | `v1.ORVD.ORVD001.main` | `ORVD_TOPIC` |
@@ -243,7 +243,7 @@ Payload:
 
 ## 5. Политики безопасности
 
-Политики задаются JSON-массивом в переменной `SECURITY_POLICIES` (файл `agrodron/components/security_monitor/.env`). Каждая запись — тройка `(sender, topic, action)`, где `sender` и `topic` — **полные строки топиков** в брокере.
+Политики задаются JSON-массивом в переменной `SECURITY_POLICIES` (файл `systems/agrodron/src/security_monitor/.env`). Каждая запись — тройка `(sender, topic, action)`, где `sender` и `topic` — **полные строки топиков** в брокере.
 
 В `.env` используются подстановки (их раскрывает `scripts/prepare_system.py` при `make prepare`):
 
@@ -265,7 +265,7 @@ Payload:
 {"sender": "v1.Agrodron.Agrodron001.autopilot", "topic": "v1.Agrodron.Agrodron001.navigation", "action": "get_state"}
 ```
 
-**Важно:** `mission_handler` отправляет `set_home` на топик **`${SITL_TOPIC}`** (см. `SITL_TOPIC` в `agrodron/.env`), а не на вымышленный `…sitl` внутри префикса дрона. В политике должна быть тройка `(топик mission_handler, значение SITL_TOPIC, set_home)`.
+**Важно:** `mission_handler` отправляет `set_home` на топик **`${SITL_TOPIC}`** (см. `SITL_TOPIC` в `systems/agrodron/.env`), а не на вымышленный `…sitl` внутри префикса дрона. В политике должна быть тройка `(топик mission_handler, значение SITL_TOPIC, set_home)`.
 
 ### Вход снаружи (НУС, ОРВД)
 
@@ -274,7 +274,7 @@ Payload:
 - `(NUS_TOPIC, …mission_handler, load_mission)`, `(NUS_TOPIC, …mission_handler, validate_only)`, `(NUS_TOPIC, …autopilot, cmd)`, `(NUS_TOPIC, …telemetry, get_state)`
 - `(ORVD_TOPIC, …mission_handler, load_mission)`, `(ORVD_TOPIC, …mission_handler, validate_only)`, `(ORVD_TOPIC, …telemetry, get_state)`, `(ORVD_TOPIC, …autopilot, cmd)`
 
-Полный актуальный список — в `SECURITY_POLICIES` после `make prepare` смотрите в `agrodron/.generated/.env` (переменная `SECURITY_MONITOR_SECURITY_POLICIES`).
+Полный актуальный список — в `SECURITY_POLICIES` после `make prepare` смотрите в `systems/agrodron/.generated/.env` (переменная `SECURITY_MONITOR_SECURITY_POLICIES`).
 
 ### Изоляция
 
@@ -289,8 +289,8 @@ Payload:
 | | |
 |---|---|
 | **Переменная** | `MQTT_BUS_CALLBACK_WORKERS` — число потоков пула (в коде нижняя граница 4). |
-| **По умолчанию** | 32 — задано в реализации шины и в общем фрагменте `x-common-env` в `agrodron/docker-compose.yml`. |
-| **Где задать** | `agrodron/.env`, после `make prepare` — в `agrodron/.generated/.env`, либо переопределение только для нужных сервисов в compose. |
+| **По умолчанию** | 32 — задано в реализации шины и в общем фрагменте `x-common-env` в `systems/agrodron/docker-compose.yml`. |
+| **Где задать** | `systems/agrodron/.env`, после `make prepare` — в `systems/agrodron/.generated/.env`, либо переопределение только для нужных сервисов в compose. |
 
 Увеличение значения снижает риск очередей при многих одновременных `proxy_request`; при необходимости дополнительно поднимайте внешние таймауты клиентов (например `SYSTEM_MONITOR_TELEMETRY_TIMEOUT_S` у system_monitor), но сначала имеет смысл проверить этот параметр.
 
@@ -298,7 +298,7 @@ Payload:
 
 ## 6. Конфигурация
 
-### Системный `.env` (agrodron/.env)
+### Системный `.env` (systems/agrodron/.env)
 
 ```ini
 TOPIC_VERSION=v1
@@ -326,10 +326,10 @@ SITL_TELEMETRY_REQUEST_TOPIC=sitl.telemetry.request
 Скрипт `scripts/prepare_system.py` объединяет брокерный и системный docker-compose, мержит все `.env` файлы и раскрывает подстановки в политиках:
 
 ```bash
-cd agrodron && make prepare
+cd systems/agrodron && make prepare
 ```
 
-Результат: `agrodron/.generated/docker-compose.yml` и `agrodron/.generated/.env`.
+Результат: `systems/agrodron/.generated/docker-compose.yml` и `systems/agrodron/.generated/.env`.
 
 ---
 
@@ -338,7 +338,7 @@ cd agrodron && make prepare
 ### Тесты (без Docker)
 
 ```bash
-cd agrodron
+cd systems/agrodron
 
 make test                # Все тесты (unit + integration)
 make unit-test           # 44 unit-теста компонентов
@@ -348,7 +348,7 @@ make integration-test    # 12 интеграционных тестов (in-proc
 ### Docker
 
 ```bash
-cd agrodron
+cd systems/agrodron
 
 make docker-up           # Собрать и запустить все контейнеры
 make docker-ps           # Статус контейнеров
@@ -410,7 +410,7 @@ limiter обнаруживает отклонение от маршрута
 ## 9. Структура проекта
 
 ```
-agrodron/
+systems/agrodron/
   .env                          Системные параметры (топики, имя системы)
   docker-compose.yml            Сервисы компонентов
   Makefile                      Команды сборки, тестирования, запуска
