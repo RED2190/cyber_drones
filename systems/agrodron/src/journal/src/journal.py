@@ -6,8 +6,8 @@ import threading
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from systems.agrodron.src.common.base_component import BaseComponent
-from broker.system_bus import SystemBus
+from systems.agrodron.sdk.base_component import BaseComponent
+from systems.agrodron.broker.system_bus import SystemBus
 
 from systems.agrodron.src.journal import config
 

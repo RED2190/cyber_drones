@@ -1,6 +1,6 @@
 """Unit-тесты компонента telemetry."""
 import asyncio
-from broker.system_bus import SystemBus
+from systems.agrodron.broker.system_bus import SystemBus
 from systems.agrodron.src.telemetry.src.telemetry import TelemetryComponent
 from systems.agrodron.src.telemetry import config
 

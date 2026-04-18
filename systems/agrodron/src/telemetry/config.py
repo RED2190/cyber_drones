@@ -5,7 +5,7 @@
 import os
 from typing import Optional
 
-from systems.agrodron.src.common.topic_utils import topic_for, system_name
+from systems.agrodron.sdk.topic_utils import topic_for, system_name
 
 
 def component_topic() -> str:

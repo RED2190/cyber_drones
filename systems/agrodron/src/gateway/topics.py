@@ -2,7 +2,7 @@
 
 import os
 
-from systems.agrodron.src.common.topic_utils import topic_for
+from systems.agrodron.sdk.topic_utils import topic_for
 
 
 class SystemTopics:

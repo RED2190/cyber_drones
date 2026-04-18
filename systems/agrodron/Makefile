@@ -1,9 +1,23 @@
 .PHONY: help prepare unit-test integration-test test docker-up docker-up-components docker-down docker-logs docker-logs-% docker-ps status monitor-help
 
-# Все команды pipenv/pytest выполняются из каталога systems/agrodron.
-PIPENV       = PIPENV_PIPFILE=$(REPO_ROOT)/config/Pipfile pipenv
-REPO_ROOT    = $(abspath ../..)
-PYTEST       = PYTHONPATH=$(REPO_ROOT):$$PYTHONPATH $(PIPENV) run pytest -c $(REPO_ROOT)/config/pyproject.toml
+# -----------------------------------------------------------------------------
+# Расположение в монорепозитории (как systems/dummy_system в sbd-drones-economics):
+#   <корень монорепозитория>/
+#     docker/  config/  scripts/
+#     systems/agrodron/   <- этот Makefile, docker-compose.yml, src/
+#
+# Корень монорепозитория — на два уровня выше каталога systems/agrodron.
+# В sbd-drones-economics папка может называться cyber_drons (symlink на vendor);
+# тогда: make prepare SYSTEM_SLUG=cyber_drons
+# -----------------------------------------------------------------------------
+
+MONOREPO_ROOT := $(abspath ../..)
+SYSTEM_SLUG   ?= agrodron
+SYSTEM_DIR    := systems/$(SYSTEM_SLUG)
+
+PIPENV  = cd $(MONOREPO_ROOT) && PIPENV_PIPFILE=config/Pipfile pipenv
+PYTEST  = cd $(MONOREPO_ROOT) && PYTHONPATH=$(MONOREPO_ROOT) PIPENV_PIPFILE=config/Pipfile pipenv run pytest -c config/pyproject.toml
+
 GENERATED    = .generated
 COMPOSE      = docker compose -f $(GENERATED)/docker-compose.yml --env-file $(GENERATED)/.env
 BROKER       = $${BROKER_TYPE:-mqtt}
@@ -13,12 +27,15 @@ COMPONENT_SERVICES = gateway security_monitor journal navigation autopilot limit
 
 help:
 	@echo ""
+	@echo "  Ожидается монорепозиторий (sbd-drones-economics и аналоги):"
+	@echo "    MONOREPO_ROOT=$(MONOREPO_ROOT)  SYSTEM_DIR=$(SYSTEM_DIR)"
+	@echo ""
 	@echo "  Подготовка"
 	@echo "    make prepare             Собрать $(GENERATED)/docker-compose.yml + .env"
 	@echo ""
 	@echo "  Тесты (без Docker)"
-	@echo "    make unit-test           Unit-тесты компонентов (src/*/tests/)"
-	@echo "    make integration-test    Интеграционные тесты in-process (tests/integration/)"
+	@echo "    make unit-test           Unit-тесты компонентов ($(SYSTEM_DIR)/src/*/tests/)"
+	@echo "    make integration-test    Интеграционные тесты in-process ($(SYSTEM_DIR)/tests/integration/)"
 	@echo "    make test                Все тесты (unit + integration)"
 	@echo ""
 	@echo "  Docker"
@@ -45,7 +62,7 @@ help:
 
 prepare:
 	@$(PIPENV) install --dev
-	@$(PIPENV) run python scripts/prepare_system.py .
+	@$(PIPENV) run python $(SYSTEM_DIR)/scripts/prepare_system.py $(SYSTEM_DIR)
 
 # ---------------------------------------------------------------------------
 #  Тесты
@@ -53,11 +70,11 @@ prepare:
 
 unit-test:
 	@echo "=== Unit-тесты компонентов ==="
-	@$(PYTEST) src/*/tests/ -v --tb=short
+	@$(PYTEST) $(SYSTEM_DIR)/src/*/tests/ -v --tb=short
 
 integration-test:
 	@echo "=== Интеграционные тесты (in-process) ==="
-	@$(PYTEST) tests/integration/ -v --tb=short
+	@$(PYTEST) $(SYSTEM_DIR)/tests/integration/ -v --tb=short
 
 test: unit-test integration-test
 	@echo ""

@@ -7,7 +7,7 @@ import signal
 import sys
 import time
 
-from broker.bus_factory import create_system_bus
+from systems.agrodron.broker.bus_factory import create_system_bus
 from systems.agrodron.src.navigation import config
 from systems.agrodron.src.navigation.src.navigation import NavigationComponent
 

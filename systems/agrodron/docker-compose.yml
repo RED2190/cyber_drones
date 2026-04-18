@@ -1,5 +1,5 @@
 # Docker Compose для AgroDron.
-# Только сервисы компонентов. Брокер: scripts/prepare_system.py подмешивает ../../docker/docker-compose.yml (корень репозитория).
+# Только сервисы компонентов. Брокер добавляется scripts/prepare_system.py из docker/docker-compose.yml
 
 x-common-env: &common-env
   TOPIC_VERSION: ${TOPIC_VERSION:-v1}
@@ -25,8 +25,8 @@ x-common-env: &common-env
 services:
   gateway:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/gateway/docker/Dockerfile
+      context: .
+      dockerfile: src/gateway/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env
@@ -39,8 +39,8 @@ services:
 
   security_monitor:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/security_monitor/docker/Dockerfile
+      context: .
+      dockerfile: src/security_monitor/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env
@@ -53,8 +53,8 @@ services:
 
   journal:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/journal/docker/Dockerfile
+      context: .
+      dockerfile: src/journal/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env
@@ -64,8 +64,8 @@ services:
 
   navigation:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/navigation/docker/Dockerfile
+      context: .
+      dockerfile: src/navigation/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env
@@ -78,8 +78,8 @@ services:
 
   autopilot:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/autopilot/docker/Dockerfile
+      context: .
+      dockerfile: src/autopilot/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env
@@ -96,8 +96,8 @@ services:
 
   limiter:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/limiter/docker/Dockerfile
+      context: .
+      dockerfile: src/limiter/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env
@@ -113,8 +113,8 @@ services:
 
   emergensy:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/emergensy/docker/Dockerfile
+      context: .
+      dockerfile: src/emergensy/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env
@@ -125,8 +125,8 @@ services:
 
   mission_handler:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/mission_handler/docker/Dockerfile
+      context: .
+      dockerfile: src/mission_handler/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env
@@ -138,8 +138,8 @@ services:
 
   motors:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/motors/docker/Dockerfile
+      context: .
+      dockerfile: src/motors/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env
@@ -152,8 +152,8 @@ services:
 
   sprayer:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/sprayer/docker/Dockerfile
+      context: .
+      dockerfile: src/sprayer/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env
@@ -166,8 +166,8 @@ services:
 
   telemetry:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/telemetry/docker/Dockerfile
+      context: .
+      dockerfile: src/telemetry/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env
@@ -179,8 +179,8 @@ services:
 
   system_monitor:
     build:
-      context: ../..
-      dockerfile: systems/agrodron/src/system_monitor/docker/Dockerfile
+      context: .
+      dockerfile: src/system_monitor/docker/Dockerfile
     profiles: ["kafka", "mqtt"]
     environment:
       <<: *common-env

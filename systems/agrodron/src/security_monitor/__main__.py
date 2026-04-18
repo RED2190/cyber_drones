@@ -13,7 +13,7 @@ logging.basicConfig(
     format="%(levelname)s [%(name)s] %(message)s",
 )
 
-from broker.bus_factory import create_system_bus
+from systems.agrodron.broker.bus_factory import create_system_bus
 from systems.agrodron.src.security_monitor import config
 from systems.agrodron.src.security_monitor.src.security_monitor import SecurityMonitorComponent
 

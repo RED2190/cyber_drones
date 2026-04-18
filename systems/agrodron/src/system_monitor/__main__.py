@@ -3,7 +3,7 @@ import os
 import signal
 import sys
 
-from broker.bus_factory import create_system_bus
+from systems.agrodron.broker.bus_factory import create_system_bus
 from systems.agrodron.src.system_monitor import config
 from systems.agrodron.src.system_monitor.src.system_monitor import SystemMonitorComponent
 

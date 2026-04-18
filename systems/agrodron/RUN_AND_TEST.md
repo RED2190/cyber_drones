@@ -20,18 +20,18 @@ cd ..
 
 ## 1. Поднять систему (Docker)
 
-Все компоненты уже имеют рабочие `.env` в `systems/agrodron/src/<component>/.env` с топиками `agrodron.*`. Генератор собирает из них общий `.generated/.env` и единый `docker-compose`.
+В монорепозитории (как в `sbd-drones-economics`) дрон лежит в `systems/agrodron/` (имя может совпадать с `systems/cyber_drons`, если так настроен symlink). У каждого компонента — `.env` в `systems/agrodron/src/<component>/.env`. Генератор собирает из них общий `systems/agrodron/.generated/.env` и единый `docker-compose`.
 
 ### 1.1. Выбор брокера
 
-В `docker/.env` (или в окружении) задайте брокер:
+В `docker/.env` у корня монорепозитория (или в окружении) задайте брокер:
 
 - **Kafka**: `BROKER_TYPE=kafka`
 - **MQTT**: `BROKER_TYPE=mqtt`
 
 Если не задано, по умолчанию используется `kafka`.
 
-### 1.2. Запуск из каталога `agrodron`
+### 1.2. Запуск из каталога `systems/agrodron`
 
 ```bash
 cd systems/agrodron
@@ -40,16 +40,16 @@ make docker-up
 
 Эта команда:
 
-1. Выполняет **prepare** — скрипт `scripts/prepare_system.py agrodron` читает `.env` из каждого компонента в `systems/agrodron/src/`, собирает общий `systems/agrodron/.generated/docker-compose.yml` и `systems/agrodron/.generated/.env`.
+1. Выполняет **prepare** из корня монорепозитория: `python systems/agrodron/scripts/prepare_system.py systems/agrodron` (см. `Makefile`), читает `.env` компонентов в `systems/agrodron/src/`, собирает `systems/agrodron/.generated/docker-compose.yml` и `.env`.
 2. Поднимает брокер (Kafka или Mosquitto) и все сервисы системы с профилем `kafka` или `mqtt`.
 
 Эквивалент вручную (без make):
 
 ```bash
-# из корня репозитория
+# из корня монорепозитория (рядом с docker/, config/, scripts/)
 cd config
-pipenv run python ../scripts/prepare_system.py agrodron
-cd ../agrodron
+pipenv run python ../systems/agrodron/scripts/prepare_system.py systems/agrodron
+cd ../systems/agrodron
 # подставить kafka или mqtt
 docker compose -f .generated/docker-compose.yml --env-file .generated/.env --profile mqtt up -d --build
 ```
@@ -211,7 +211,7 @@ make integration-test
 3. Запуск: `pytest -c ../config/pyproject.toml tests/test_integration.py -vv -rA -s`
 4. `make docker-down`
 
-Если файла `systems/agrodron/tests/test_integration.py` ещё нет, эта цель будет падать. В таком случае ограничьтесь unit-тестами: `make unit-test`.
+Если нужных интеграционных тестов ещё нет, эта цель может падать. В таком случае ограничьтесь unit-тестами: `make unit-test`.
 
 ### 2.4. Все тесты (unit + integration)
 

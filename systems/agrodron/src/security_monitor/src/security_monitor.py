@@ -6,9 +6,9 @@ import logging
 import os
 from typing import Dict, Any, Tuple, Set, Optional
 
-from systems.agrodron.src.common.base_component import BaseComponent
-from broker.system_bus import SystemBus
-from systems.agrodron.src.common.topic_utils import topic_prefix
+from systems.agrodron.sdk.base_component import BaseComponent
+from systems.agrodron.broker.system_bus import SystemBus
+from systems.agrodron.sdk.topic_utils import topic_prefix
 from systems.agrodron.src.security_monitor import config
 
 
@@ -74,7 +74,7 @@ class SecurityMonitorComponent(BaseComponent):
 
     def _log_component_started(self) -> None:
         """Журнал принимает log_event только от топика МБ — публикуем напрямую."""
-        from systems.agrodron.src.common.topic_utils import topic_for
+        from systems.agrodron.sdk.topic_utils import topic_for
 
         journal_topic = topic_for("journal")
         msg = {

@@ -11,8 +11,8 @@ os.environ.setdefault("ORVD_TOPIC", "v1.ORVD.ORVD001.main")
 os.environ.setdefault("NUS_TOPIC", "v1.NUS.NUS001.main")
 os.environ.setdefault("DRONEPORT_TOPIC", "v1.Droneport.DP001.main")
 
-from systems.agrodron.tests.integration.integration_bus import IntegrationBus
-from systems.agrodron.src.common.topic_utils import topic_for
+from agrodron.tests.integration.integration_bus import IntegrationBus
+from systems.agrodron.sdk.topic_utils import topic_for
 
 
 WPL_SAMPLE = "QGC WPL 110\n0\t1\t0\t16\t0\t0\t0\t0\t60.0\t30.0\t5.0\t1"

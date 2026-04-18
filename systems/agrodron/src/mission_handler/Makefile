@@ -1,7 +1,7 @@
 .PHONY: docker-build docker-up unit-test
 
-PIPENV_PIPFILE = ../../../../config/Pipfile
-PYTEST_CONFIG = ../../../../config/pyproject.toml
+PIPENV_PIPFILE = ../../config/Pipfile
+PYTEST_CONFIG = ../../config/pyproject.toml
 
 docker-build:
 \t@docker build -t mission_handler_component -f docker/Dockerfile ../..

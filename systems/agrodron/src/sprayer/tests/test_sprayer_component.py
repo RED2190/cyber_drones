@@ -1,6 +1,6 @@
 """Unit-тесты компонента sprayer."""
 import asyncio
-from broker.system_bus import SystemBus
+from systems.agrodron.broker.system_bus import SystemBus
 from systems.agrodron.src.sprayer.src.sprayer import SprayerComponent, SprayerState
 from systems.agrodron.src.sprayer import config
 

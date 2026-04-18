@@ -7,9 +7,9 @@ import time
 from collections import deque
 from typing import Any, Deque, Dict, List, Optional
 
-from broker.system_bus import SystemBus
-from systems.agrodron.src.common.base_component import BaseComponent
-from systems.agrodron.src.common.proxy_reply import unwrap_proxy_target_response
+from systems.agrodron.broker.system_bus import SystemBus
+from systems.agrodron.sdk.base_component import BaseComponent
+from systems.agrodron.scripts.proxy_reply import unwrap_proxy_target_response
 
 from systems.agrodron.src.system_monitor import config
 

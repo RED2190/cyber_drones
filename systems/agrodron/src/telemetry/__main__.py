@@ -6,7 +6,7 @@ import os
 import signal
 import sys
 
-from broker.bus_factory import create_system_bus
+from systems.agrodron.broker.bus_factory import create_system_bus
 from systems.agrodron.src.telemetry import config
 from systems.agrodron.src.telemetry.src.telemetry import TelemetryComponent
 

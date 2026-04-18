@@ -8,7 +8,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from systems.agrodron.src.common.topic_utils import topic_for
+from systems.agrodron.sdk.topic_utils import topic_for
 
 
 def _journal_component_dir() -> Path:

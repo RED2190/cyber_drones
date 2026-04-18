@@ -9,9 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY config/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY broker /app/broker
-COPY sdk /app/sdk
-COPY systems/agrodron /app/systems/agrodron
+COPY . /app/systems/agrodron
 
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1

@@ -12,7 +12,7 @@ logging.basicConfig(
     format="%(levelname)s [%(name)s] %(message)s",
 )
 
-from broker.bus_factory import create_system_bus
+from systems.agrodron.broker.bus_factory import create_system_bus
 from systems.agrodron.src.motors import config
 from systems.agrodron.src.motors.src.motors import MotorsComponent
 

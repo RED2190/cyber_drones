@@ -1,8 +1,8 @@
 """Integration tests: proxy_request through security_monitor."""
 import json
 
-from systems.agrodron.tests.integration.integration_bus import IntegrationBus
-from systems.agrodron.src.common.topic_utils import topic_for
+from agrodron.tests.integration.integration_bus import IntegrationBus
+from systems.agrodron.sdk.topic_utils import topic_for
 
 from systems.agrodron.src.security_monitor.src.security_monitor import SecurityMonitorComponent
 from systems.agrodron.src.motors.src.motors import MotorsComponent

@@ -5,8 +5,8 @@ from __future__ import annotations
 import os
 from typing import Any, Dict, Optional, Tuple
 
-from broker.system_bus import SystemBus
-from systems.agrodron.src.common.base_system import BaseSystem
+from systems.agrodron.broker.system_bus import SystemBus
+from systems.agrodron.sdk.base_system import BaseSystem
 
 from systems.agrodron.src.gateway.topics import ComponentTopics, GatewayActions, SystemTopics
 
