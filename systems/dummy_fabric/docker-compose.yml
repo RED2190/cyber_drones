@@ -1,0 +1,305 @@
+# Docker Compose для dummy_fabric.
+# 5 fabric-proxy инстансов (по одному на организацию),
+# 5 компонентов-организаций + gateway.
+# Брокер запускается отдельно (docker/docker-compose.yml).
+
+services:
+
+  # ── Fabric-proxy инстансы ──────────────────────────────────────
+
+  fabric-proxy-aggregator:
+    build:
+      context: ../../docker/fabric-proxy
+      dockerfile: Dockerfile
+    profiles: ["fabric"]
+    restart: on-failure
+    environment:
+      - FABRIC_PEER_ENDPOINT=peer0.aggregator.drone-network.local:7051
+      - FABRIC_PEER_HOST=peer0.aggregator.drone-network.local
+      - FABRIC_PEER_ORG=aggregator.drone-network.local
+      - FABRIC_MSP_ID=AggregatorMSP
+      - FABRIC_USER=Admin@aggregator.drone-network.local
+      - FABRIC_CHANNEL=dronechannel
+      - FABRIC_CHAINCODE=drone-chaincode
+      - FABRIC_CRYPTO_PATH=/crypto
+      - PORT=3000
+    volumes:
+      - ../../fabric-network/network/crypto-config:/crypto:ro
+    ports:
+      - "${FABRIC_PROXY_AGGREGATOR_PORT:-3001}:3000"
+    networks:
+      - drones_net
+      - fabric_drone
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  fabric-proxy-certcenter:
+    build:
+      context: ../../docker/fabric-proxy
+      dockerfile: Dockerfile
+    profiles: ["fabric"]
+    restart: on-failure
+    environment:
+      - FABRIC_PEER_ENDPOINT=peer0.certcenter.drone-network.local:10051
+      - FABRIC_PEER_HOST=peer0.certcenter.drone-network.local
+      - FABRIC_PEER_ORG=certcenter.drone-network.local
+      - FABRIC_MSP_ID=CertCenterMSP
+      - FABRIC_USER=Admin@certcenter.drone-network.local
+      - FABRIC_CHANNEL=dronechannel
+      - FABRIC_CHAINCODE=drone-chaincode
+      - FABRIC_CRYPTO_PATH=/crypto
+      - PORT=3000
+    volumes:
+      - ../../fabric-network/network/crypto-config:/crypto:ro
+    ports:
+      - "${FABRIC_PROXY_CERTCENTER_PORT:-3002}:3000"
+    networks:
+      - drones_net
+      - fabric_drone
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  fabric-proxy-insurer:
+    build:
+      context: ../../docker/fabric-proxy
+      dockerfile: Dockerfile
+    profiles: ["fabric"]
+    restart: on-failure
+    environment:
+      - FABRIC_PEER_ENDPOINT=peer0.insurer.drone-network.local:9051
+      - FABRIC_PEER_HOST=peer0.insurer.drone-network.local
+      - FABRIC_PEER_ORG=insurer.drone-network.local
+      - FABRIC_MSP_ID=InsurerMSP
+      - FABRIC_USER=Admin@insurer.drone-network.local
+      - FABRIC_CHANNEL=dronechannel
+      - FABRIC_CHAINCODE=drone-chaincode
+      - FABRIC_CRYPTO_PATH=/crypto
+      - PORT=3000
+    volumes:
+      - ../../fabric-network/network/crypto-config:/crypto:ro
+    ports:
+      - "${FABRIC_PROXY_INSURER_PORT:-3003}:3000"
+    networks:
+      - drones_net
+      - fabric_drone
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  fabric-proxy-operator:
+    build:
+      context: ../../docker/fabric-proxy
+      dockerfile: Dockerfile
+    profiles: ["fabric"]
+    restart: on-failure
+    environment:
+      - FABRIC_PEER_ENDPOINT=peer0.operator.drone-network.local:8051
+      - FABRIC_PEER_HOST=peer0.operator.drone-network.local
+      - FABRIC_PEER_ORG=operator.drone-network.local
+      - FABRIC_MSP_ID=OperatorMSP
+      - FABRIC_USER=Admin@operator.drone-network.local
+      - FABRIC_CHANNEL=dronechannel
+      - FABRIC_CHAINCODE=drone-chaincode
+      - FABRIC_CRYPTO_PATH=/crypto
+      - PORT=3000
+    volumes:
+      - ../../fabric-network/network/crypto-config:/crypto:ro
+    ports:
+      - "${FABRIC_PROXY_OPERATOR_PORT:-3004}:3000"
+    networks:
+      - drones_net
+      - fabric_drone
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  fabric-proxy-orvd:
+    build:
+      context: ../../docker/fabric-proxy
+      dockerfile: Dockerfile
+    profiles: ["fabric"]
+    restart: on-failure
+    environment:
+      - FABRIC_PEER_ENDPOINT=peer0.orvd.drone-network.local:12051
+      - FABRIC_PEER_HOST=peer0.orvd.drone-network.local
+      - FABRIC_PEER_ORG=orvd.drone-network.local
+      - FABRIC_MSP_ID=OrvdMSP
+      - FABRIC_USER=Admin@orvd.drone-network.local
+      - FABRIC_CHANNEL=dronechannel
+      - FABRIC_CHAINCODE=drone-chaincode
+      - FABRIC_CRYPTO_PATH=/crypto
+      - PORT=3000
+    volumes:
+      - ../../fabric-network/network/crypto-config:/crypto:ro
+    ports:
+      - "${FABRIC_PROXY_ORVD_PORT:-3005}:3000"
+    networks:
+      - drones_net
+      - fabric_drone
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  # ── Компоненты-организации ─────────────────────────────────────
+
+  fabric_aggregator:
+    build:
+      context: ../..
+      dockerfile: systems/dummy_fabric/src/aggregator/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - COMPONENT_ID=fabric_aggregator
+      - SYSTEM_NAMESPACE=${SYSTEM_NAMESPACE:-}
+      - BROKER_TYPE=${BROKER_TYPE:-kafka}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - FABRIC_PROXY_URL=http://fabric-proxy-aggregator:3000
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    depends_on:
+      fabric-proxy-aggregator:
+        condition: service_healthy
+    restart: unless-stopped
+
+  fabric_cert_center:
+    build:
+      context: ../..
+      dockerfile: systems/dummy_fabric/src/cert_center/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - COMPONENT_ID=fabric_cert_center
+      - SYSTEM_NAMESPACE=${SYSTEM_NAMESPACE:-}
+      - BROKER_TYPE=${BROKER_TYPE:-kafka}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - FABRIC_PROXY_URL=http://fabric-proxy-certcenter:3000
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    depends_on:
+      fabric-proxy-certcenter:
+        condition: service_healthy
+    restart: unless-stopped
+
+  fabric_insurer:
+    build:
+      context: ../..
+      dockerfile: systems/dummy_fabric/src/insurer/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - COMPONENT_ID=fabric_insurer
+      - SYSTEM_NAMESPACE=${SYSTEM_NAMESPACE:-}
+      - BROKER_TYPE=${BROKER_TYPE:-kafka}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - FABRIC_PROXY_URL=http://fabric-proxy-insurer:3000
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    depends_on:
+      fabric-proxy-insurer:
+        condition: service_healthy
+    restart: unless-stopped
+
+  fabric_operator:
+    build:
+      context: ../..
+      dockerfile: systems/dummy_fabric/src/operator_node/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - COMPONENT_ID=fabric_operator
+      - SYSTEM_NAMESPACE=${SYSTEM_NAMESPACE:-}
+      - BROKER_TYPE=${BROKER_TYPE:-kafka}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - FABRIC_PROXY_URL=http://fabric-proxy-operator:3000
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    depends_on:
+      fabric-proxy-operator:
+        condition: service_healthy
+    restart: unless-stopped
+
+  fabric_orvd:
+    build:
+      context: ../..
+      dockerfile: systems/dummy_fabric/src/orvd/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - COMPONENT_ID=fabric_orvd
+      - SYSTEM_NAMESPACE=${SYSTEM_NAMESPACE:-}
+      - BROKER_TYPE=${BROKER_TYPE:-kafka}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - FABRIC_PROXY_URL=http://fabric-proxy-orvd:3000
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    depends_on:
+      fabric-proxy-orvd:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Gateway ────────────────────────────────────────────────────
+
+  fabric_gateway:
+    build:
+      context: ../..
+      dockerfile: systems/dummy_fabric/src/gateway/docker/Dockerfile
+    profiles: ["kafka", "mqtt"]
+    environment:
+      - SYSTEM_ID=dummy_fabric
+      - SYSTEM_NAMESPACE=${SYSTEM_NAMESPACE:-}
+      - BROKER_TYPE=${BROKER_TYPE:-kafka}
+      - BROKER_USER=${ADMIN_USER:-admin}
+      - BROKER_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - HEALTH_PORT=8080
+      - PYTHONUNBUFFERED=1
+    networks:
+      - drones_net
+    restart: unless-stopped
+
+networks:
+  drones_net:
+    external: true
+    name: ${DOCKER_NETWORK:-drones_net}
+  fabric_drone:
+    external: true
+    name: fabric_drone

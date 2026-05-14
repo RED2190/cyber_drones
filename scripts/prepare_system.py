@@ -17,11 +17,6 @@ from copy import deepcopy
 import yaml
 
 
-def to_env_prefix(name: str) -> str:
-    """Convert service/component name to ENV-safe prefix."""
-    return "".join(ch if ch.isalnum() else "_" for ch in name).upper()
-
-
 def parse_env_file(path: Path) -> dict:
     env = {}
     if not path.exists():
@@ -82,8 +77,8 @@ def prepare_system(system_dir: str):
 
     root_env = parse_env_file(root / "docker" / ".env")
 
-    # Discover components and their .env files (system components/ or src/)
-    components_dir = system_path / "components" if (system_path / "components").is_dir() else system_path / "src"
+    # Discover components and their .env files (under system src/)
+    components_dir = system_path / "src"
     component_envs = {}
     if components_dir.is_dir():
         for comp_dir in sorted(components_dir.iterdir()):
@@ -98,21 +93,23 @@ def prepare_system(system_dir: str):
     merged_env = dict(root_env)
     suffixes = []
     for i, (comp_name, env) in enumerate(component_envs.items()):
-        prefix = to_env_prefix(comp_name)
-        for key, value in env.items():
-            merged_env[f"{prefix}_{key}"] = value
-
         suffix = chr(ord("A") + i)
         suffixes.append(suffix)
         merged_env[f"COMPONENT_USER_{suffix}"] = env.get("BROKER_USER", "")
         merged_env[f"COMPONENT_PASSWORD_{suffix}"] = env.get("BROKER_PASSWORD", "")
 
-    # --- Rewrite broker volume paths ---
+    # --- Rewrite broker volume paths and build contexts ---
     broker_dir = broker_compose_path.parent
     broker_services = deepcopy(broker_compose.get("services", {}))
     for svc_name, svc in broker_services.items():
         if "volumes" in svc:
             svc["volumes"] = rewrite_volumes(svc["volumes"], broker_dir, output_dir)
+        if "build" in svc:
+            build = svc["build"]
+            if isinstance(build, dict) and "context" in build:
+                build["context"] = rewrite_path(build["context"], broker_dir, output_dir)
+            elif isinstance(build, str):
+                svc["build"] = rewrite_path(build, broker_dir, output_dir)
 
         # Update broker env: replace hardcoded COMPONENT_USER_* with discovered ones
         env_block = svc.get("environment", {})
@@ -137,7 +134,7 @@ def prepare_system(system_dir: str):
 
         svc["environment"] = env_block
 
-    # --- Rewrite component build paths ---
+    # --- Rewrite component build paths and volumes ---
     system_dir_abs = system_compose_path.parent
     component_services = deepcopy(system_compose.get("services", {}))
     for svc_name, svc in component_services.items():
@@ -145,6 +142,8 @@ def prepare_system(system_dir: str):
             build = svc["build"]
             if isinstance(build, dict) and "context" in build:
                 build["context"] = rewrite_path(build["context"], system_dir_abs, output_dir)
+        if "volumes" in svc:
+            svc["volumes"] = rewrite_volumes(svc["volumes"], system_dir_abs, output_dir)
 
         # Add depends_on for broker health checks
         svc["depends_on"] = {
@@ -153,15 +152,20 @@ def prepare_system(system_dir: str):
         }
 
     # --- Merge into single compose ---
+    merged_networks = {
+        "drones_net": {
+            "driver": "bridge",
+            "name": "${DOCKER_NETWORK:-drones_net}",
+        }
+    }
+    # Copy external networks from broker (e.g. fabric_drone) so fabric-proxy can attach
+    for net_name, net_cfg in (broker_compose.get("networks") or {}).items():
+        if net_name != "drones_net":
+            merged_networks[net_name] = deepcopy(net_cfg)
     merged = {
         "name": "drones",
         "services": {},
-        "networks": {
-            "drones_net": {
-                "driver": "bridge",
-                "name": "${DOCKER_NETWORK:-drones_net}",
-            }
-        },
+        "networks": merged_networks,
     }
 
     for svc_name, svc in broker_services.items():
@@ -169,14 +173,6 @@ def prepare_system(system_dir: str):
 
     for svc_name, svc in component_services.items():
         merged["services"][svc_name] = svc
-
-    # --- Merge top-level volumes (for persistent component storage) ---
-    broker_volumes = deepcopy(broker_compose.get("volumes", {})) or {}
-    system_volumes = deepcopy(system_compose.get("volumes", {})) or {}
-    if broker_volumes or system_volumes:
-        merged["volumes"] = {}
-        merged["volumes"].update(broker_volumes)
-        merged["volumes"].update(system_volumes)
 
     # --- Write output ---
     compose_out = output_dir / "docker-compose.yml"

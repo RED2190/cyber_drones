@@ -1,0 +1,439 @@
+\PassOptionsToPackage{english,russian}{babel}
+\documentclass[aspectratio=169]{beamer}
+\usetheme{metropolis}
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{babel}  
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codeframe}{RGB}{220,220,220}
+\definecolor{codekw}{RGB}{0,92,197}
+\definecolor{codestr}{RGB}{163,21,21}
+\definecolor{codecom}{RGB}{0,128,0}
+
+\lstset{
+basicstyle=\ttfamily\small,
+backgroundcolor=\color{codebg},
+frame=single,
+rulecolor=\color{codeframe},
+framesep=4pt,
+keywordstyle=\color{codekw}\bfseries,
+stringstyle=\color{codestr},
+commentstyle=\color{codecom},
+showstringspaces=false,
+breaklines=true,
+tabsize=2
+}
+
+\begin{document}
+
+
+
+%------------------------------------------------
+
+\begin{frame}{Технология распределенных реестров}
+
+Технология распределенных реестров – это подход к обмену и хранению информации, при котором:
+
+\begin{itemize}
+\item каждый участник может обладать полноценной копией реестра
+\item синхронизация копий реестра происходит на основе протокола достижения распределенного консенсуса, то есть соглашения среди участников на добавление новой информации
+\item каждый участник взаимодействия может иметь доступ к истории транзакций
+\end{itemize}
+
+Такой подход позволяет обеспечить единый источник достоверных данных без необходимости централизованного доверенного посредника.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Блокчейн}
+
+Одной из наиболее известных реализаций распределенных реестров является блокчейн.
+
+В блокчейне информация группируется в цблоки, которые связаны между собой в цепочку. Каждый новый блок содержит ссылку на предыдущий.
+
+Это обеспечивает:
+
+\begin{itemize}
+\item целостность данных
+\item невозможность изменения истории
+\item прозрачность всех транзакций
+\end{itemize}
+
+ Термин <<\textbf{блокчейн}>>  иногда заменяет название всей технологии, потому что такой способ записи используется чаще других.
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Структура блокчейна}
+
+\begin{center}
+\includegraphics[width=\textwidth]{blockchain_structure.png}
+\end{center}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Типы распределенных реестров}
+
+По уровню доступа участников сети распределенные реестры можно разделить на несколько типов.
+
+\textbf{Публичные сети}
+
+Любой участник может подключиться к сети и участвовать в ее работе.
+
+\textbf{Частные сети}
+
+Доступ к сети ограничен, участники известны и контролируются.
+
+\textbf{Гибридные сети}
+
+Часть данных является публичной, а часть доступна только определенным участникам.
+
+Для корпоративных систем чаще всего используются частные или гибридные сети.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Основные свойства распределенных реестров}
+
+Технология распределенных реестров обладает рядом ключевых характеристик:
+
+\begin{itemize}
+\item децентрализация — данные хранятся на множестве независимых узлов в P2P-сети
+\item неизменяемость — записанные данные невозможно удалить или изменить
+\item консенсус — все узлы сети используют единый алгоритм для синхронизации и подтверждения правильности обновлений реестра
+\item прозрачность — участники имеют доступ к истории операций
+\item криптографическая безопасность — используются цифровые подписи
+\item автоматизация — возможна реализация смарт-контрактов
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Смарт-контракты}
+
+Смарт-контракт — это программа, хранящаяся в распределенном реестре и автоматически исполняющая условия договора.
+
+Исполнение смарт-контракта происходит при наступлении определенных условий.
+
+Например, в системе эксплуатации дронов смарт-контракт может проверять:
+
+\begin{itemize}
+\item наличие действующей сертификации дрона
+\item наличие страхового полиса
+\item наличие разрешения на выполнение полета
+\end{itemize}
+
+Если все условия выполняются, система может автоматически разрешить выполнение миссии.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Платформы распределенных реестров}
+
+Существует множество платформ для реализации распределенных реестров.
+
+Наиболее известные из них:
+
+\begin{itemize}
+\item Ethereum — публичная блокчейн-платформа со смарт-контрактами на языке Solidity
+\item Tendermint / Cosmos — модульная платформа для создания собственных блокчейн-сетей
+\item Hyperledger Fabric — корпоративная платформа распределенного реестра
+\end{itemize}
+
+Для корпоративных систем с известными участниками наиболее подходящей является платформа Hyperledger Fabric.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Почему выбран Hyperledger Fabric}
+
+Hyperledger Fabric изначально проектировался для использования в корпоративной среде.
+
+Основные преимущества:
+
+\begin{itemize}
+\item идентификация участников сети
+\item контроль доступа к данным
+\item высокая пропускная способность
+\item низкая задержка подтверждения транзакций
+\item возможность разделения данных между организациями
+\end{itemize}
+
+Эти характеристики делают платформу подходящей для построения инфраструктуры взаимодействия участников системы эксплуатации дронов.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Архитектура Hyperledger Fabric}
+
+Основными компонентами сети Hyperledger Fabric являются:
+
+\begin{itemize}
+\item Peer nodes — узлы сети, хранящие копии реестра
+\item Ordering Service — сервис упорядочивания транзакций
+\item Chaincode — смарт-контракты
+\item Certificate Authority — центр сертификации участников
+\item Channels — изолированные каналы обмена данными
+\end{itemize}
+
+Каждая организация в сети может иметь собственные узлы и участвовать в консенсусе.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Типы узлов в сети}
+
+В сети Hyperledger Fabric используются несколько типов узлов.
+
+\textbf{Endorsing Peer}
+
+Узел, который симулирует исполнение транзакции и возвращает результаты выполнения клиентскому приложению вместе со своей подписью.
+
+\textbf{Ordering Service}
+
+Распределенный сервис на нескольких узлах, служит для формирования новых блоков распределенного реестра и создания очередности исполнения транзакций.
+
+\textbf{Committing Peer}
+
+Узел, на котором происходит проверка транзакций на соответствие политике одобрения, установленной для конкретного приложения, перед их записью в реестр.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Центр сертификации}
+
+Для идентификации участников используется центр сертификации (Certificate Authority).
+
+Он выполняет следующие функции:
+
+\begin{itemize}
+\item выдача цифровых сертификатов участникам сети
+\item подтверждение принадлежности участников к организациям
+\item обеспечение аутентификации пользователей и узлов сети
+\end{itemize}
+
+Сертификаты основаны на стандарте X.509 и инфраструктуре открытых ключей (PKI).
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Модель выполнения транзакций}
+
+В большинстве блокчейн-платформ используется модель:
+
+Order → Execute
+
+Hyperledger Fabric использует модель:
+
+Execute → Order → Validate
+
+\begin{enumerate}
+\item выполнение транзакции и ее одобрение
+\item упорядочивание транзакций
+\item проверка транзакций и запись в реестр
+\end{enumerate}
+
+Такая архитектура позволяет повысить масштабируемость и производительность сети.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Взаимодействие приложений с сетью}
+
+Приложения взаимодействуют с сетью Hyperledger Fabric через SDK.
+
+Основные этапы выполнения транзакции:
+
+\begin{enumerate}
+\item приложение формирует транзакцию
+\item транзакция отправляется endorsing peer
+\item выполняется смарт-контракт
+\item ordering service формирует блок транзакций
+\item committing peers проверяют и записывают блок в реестр
+\end{enumerate}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Взаимодействие приложений с сетью}
+
+\begin{center}
+\includegraphics[width=\textwidth]{fabric_transaction_flow.png}
+\end{center}
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Каналы}
+
+Канал представляет собой изолированную подсеть внутри блокчейн-сети.
+
+Каналы позволяют:
+
+\begin{itemize}
+\item разделять данные между организациями
+\item обеспечивать конфиденциальность транзакций
+\item реализовывать независимые бизнес-процессы
+\end{itemize}
+
+Каждый канал имеет собственный реестр и набор смарт-контрактов.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Архитектура сети}
+
+\begin{center}
+\includegraphics[width=0.95\textwidth]{fabric_network_architecture.png}
+\end{center}
+
+\end{frame}
+%------------------------------------------------
+\begin{frame}[fragile]{Смарт-контракт сертификации прошивок}
+
+В системе реализован отдельный смарт-контракт \textbf{FirmwareContract},
+который отвечает за управление сертифицированными прошивками дронов.
+
+\begin{lstlisting}[language=Go]
+type FirmwareContract struct {
+	contractapi.Contract
+}
+\end{lstlisting}
+
+Контракт поддерживает следующие группы операций:
+
+\begin{itemize}\setlength\itemsep{0.5em}
+\item \textbf{создание записи:} \texttt{CertifyFirmware};
+\item \textbf{чтение данных:} \texttt{ReadFirmware}, \texttt{ListFirmwares};
+\item \textbf{обновление:} \texttt{UpdateFirmware};
+\item \textbf{отзыв сертификации:} \texttt{RevokeFirmwareCertification}.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{Структура объекта Firmware}
+
+
+Основная сущность контракта --- объект \textbf{Firmware}, содержащий:
+
+\vspace{0.5em}
+
+\begin{lstlisting}[language=Go]
+type Firmware struct {
+    ID                 string   `json:"id"`
+    SecurityObjectives []string `json:"security_objectives"`
+    SoftwareObjectives []string `json:"software_objectives"`
+    CertifiedAt        string   `json:"certified_at"`
+    CertifiedBy        string   `json:"certified_by"`
+}
+\end{lstlisting}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{Пример реализации FirmwareContract}
+\begin{lstlisting}[language=Go]
+func (c *FirmwareContract) CertifyFirmware(...) error {
+    if err := assertRole(...); err != nil {
+        return err
+    }
+
+    certifierID, _ := cid.GetID(ctx.GetStub())
+
+    firmware := Firmware{...}
+
+    key, err :=  makeFirmwareKey(ctx, id)
+    if err != nil {
+        return err
+    }
+
+    return putState(ctx, key, firmware)
+}
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}{Логика работы контракта FirmwareContract}
+
+Функция \texttt{CertifyFirmware} реализует создание новой записи
+о сертифицированной прошивке в распределённом реестре.
+
+При выполнении транзакции контракт:
+
+\begin{enumerate}\setlength\itemsep{0.5em}
+\item проверяет роль вызывающей стороны;
+\item получает идентификатор участника из контекста Fabric;
+\item формирует объект \texttt{Firmware};
+\item создает составной ключ для записи в world state;
+\item сохраняет объект в распределённом реестре.
+\end{enumerate}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{DronePropertiesContract}
+
+Смарт-контракт для управления паспортами дронов и страховками.
+
+\begin{lstlisting}[language=Go]
+type DronePropertiesContract struct {
+	contractapi.Contract
+}
+\end{lstlisting}
+
+\textbf{Типы данных:}
+\begin{itemize}
+\item TypeCertificate — сертификаты типа
+\item DronePass — паспорта дронов
+\item InsuranceRecord — страховки
+\end{itemize}
+
+\textbf{Операции:}
+\begin{itemize}
+\item Выпуск сертификатов типа
+\item Создание/чтение/обновление паспортов
+\item Управление страховками
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{Смарт-контракт управления заказами}
+
+Смарт-контракт \textbf{OrderContract} управляет заказами на полеты дронов.
+
+\begin{lstlisting}[language=Go]
+type OrderContract struct {
+	contractapi.Contract
+}
+\end{lstlisting}
+
+\textbf{Типы данных:}
+\begin{itemize}
+\item Order — заказ с распределением платежей
+\item MissionInsurance — страховка миссии
+\item FlightPermission — разрешение ОрВД
+\item RestrictionViolation — нарушения
+\end{itemize}
+
+\textbf{Жизненный цикл заказа:}
+Создание $\rightarrow$ Назначение $\rightarrow$ Одобрение $\rightarrow$ 
+Подтверждение $\rightarrow$ Полёт $\rightarrow$ Завершение $\rightarrow$ Оплата
+
+\end{frame}
+\end{document}
+

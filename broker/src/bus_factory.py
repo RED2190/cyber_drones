@@ -1,6 +1,7 @@
 """
 Factory для создания SystemBus на основе конфигурации.
 Поддерживаемые типы: kafka, mqtt.
+Поддержка SafeBus: SAFE_BUS_ENABLED=true.
 """
 import os
 from typing import Dict, Optional
@@ -13,7 +14,8 @@ from broker.mqtt.mqtt_system_bus import MQTTSystemBus
 def create_system_bus(
     bus_type: Optional[str] = None,
     client_id: Optional[str] = None,
-    config: Optional[Dict] = None
+    config: Optional[Dict] = None,
+    safe: Optional[bool] = None,
 ) -> SystemBus:
     """
     Создает SystemBus указанного типа для межсистемного взаимодействия.
@@ -23,9 +25,10 @@ def create_system_bus(
                   Если None, берется из переменной окружения BROKER_TYPE.
         client_id: Идентификатор клиента (для Kafka/MQTT)
         config: Словарь с конфигурацией
+        safe: Обернуть в SafeBus. Если None — берётся из SAFE_BUS_ENABLED.
 
     Returns:
-        SystemBus: Экземпляр SystemBus указанного типа
+        SystemBus: Экземпляр SystemBus (или SafeBus, если включён)
     """
     if bus_type is None:
         if config and "broker" in config and "type" in config["broker"]:
@@ -55,7 +58,7 @@ def create_system_bus(
             "group_id",
             os.getenv("KAFKA_GROUP_ID")
         )
-        return KafkaSystemBus(
+        bus = KafkaSystemBus(
             bootstrap_servers=bootstrap_servers,
             client_id=cid,
             group_id=group_id
@@ -69,9 +72,21 @@ def create_system_bus(
             os.getenv("SYSTEM_ID", "system_bus")
         )
         qos = mqtt_config.get("qos", int(os.getenv("MQTT_QOS", "1")))
-        return MQTTSystemBus(broker=broker, port=port, client_id=cid, qos=qos)
+        bus = MQTTSystemBus(broker=broker, port=port, client_id=cid, qos=qos)
 
     else:
         raise ValueError(
             f"Unknown broker type: {bus_type}. Supported types: 'kafka', 'mqtt'"
         )
+
+    use_safe = safe if safe is not None else (
+        os.getenv("SAFE_BUS_ENABLED", "").lower() in ("true", "1", "yes")
+    )
+    if use_safe:
+        from sdk.safe_bus import SafeBus
+        bus = SafeBus(
+            bus,
+            check_timeout=float(os.getenv("SAFE_BUS_CHECK_TIMEOUT", "5.0")),
+        )
+
+    return bus

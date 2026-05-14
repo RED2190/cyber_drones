@@ -1,0 +1,73 @@
+# Hyperledger Fabric Network Configuration
+# Drone Fleet Management System
+
+OrdererOrgs:
+  - Name: Orderer
+    Domain: drone-network.local
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  # Организация Агрегатора (координатор заказов)
+  - Name: Aggregator
+    Domain: aggregator.drone-network.local
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  # Организация Оператора дронов
+  - Name: Operator
+    Domain: operator.drone-network.local
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  # Организация Страховщика
+  - Name: Insurer
+    Domain: insurer.drone-network.local
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  # Организация Сертификационного центра
+  - Name: CertCenter
+    Domain: certcenter.drone-network.local
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  # Организация Производителя дронов
+  - Name: Manufacturer
+    Domain: manufacturer.drone-network.local
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+      
+  #ОрВД
+  - Name: Orvd
+    Domain: orvd.drone-network.local
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  # Регулятор
+  - Name: Regulator
+    Domain: regulator.drone-network.local
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1

@@ -1,0 +1,28 @@
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: drones-jenkins:local
+    container_name: drones-jenkins
+    user: root
+    restart: unless-stopped
+    ports:
+      - "${JENKINS_HTTP_PORT:-8080}:8080"
+      - "${JENKINS_AGENT_PORT:-50000}:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./casc.yaml:/var/jenkins_home/casc.yaml:ro
+      - /tmp/drones-jenkins-workspace:/tmp/drones-jenkins-workspace
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+      CASC_JENKINS_CONFIG: /var/jenkins_home/casc.yaml
+      JENKINS_URL: "${JENKINS_URL:-http://localhost:8080/}"
+      JENKINS_ADMIN_USER: "${JENKINS_ADMIN_USER:-admin}"
+      JENKINS_ADMIN_PASSWORD: "${JENKINS_ADMIN_PASSWORD:-admin}"
+      GIT_REPO_URL: "${GIT_REPO_URL}"
+      GIT_BRANCH: "${GIT_BRANCH:-master}"
+
+volumes:
+  jenkins_home:

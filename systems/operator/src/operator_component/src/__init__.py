@@ -1,0 +1,2 @@
+"""Operator component implementation."""
+

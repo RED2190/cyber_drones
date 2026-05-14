@@ -1,0 +1,13 @@
+*.code-workspace
+.vscode
+venv/
+.env
+*.lock
+__pycache__
+*.vscode
+*.pytest_cache
+*.pyc
+.generated/
+fabric/
+.DS_Store
+**/postgres_data/

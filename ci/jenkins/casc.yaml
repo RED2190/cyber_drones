@@ -1,0 +1,103 @@
+jenkins:
+  systemMessage: "sbd-drones-economics CI — managed by JCasC"
+  numExecutors: 4
+  mode: NORMAL
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_USER:-admin}"
+          password: "${JENKINS_ADMIN_PASSWORD:-admin}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+unclassified:
+  location:
+    url: "${JENKINS_URL:-http://localhost:8080/}"
+
+jobs:
+  - script: |
+      pipelineJob('drone-unit') {
+        description('Unit tests pipeline (ci/Jenkinsfile.unit)')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('${GIT_REPO_URL}') }
+                branch('${GIT_BRANCH}')
+              }
+            }
+            scriptPath('ci/Jenkinsfile.unit')
+            lightweight(true)
+          }
+        }
+      }
+
+  - script: |
+      pipelineJob('drone-integration') {
+        description('Integration tests pipeline (ci/Jenkinsfile.integration)')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('${GIT_REPO_URL}') }
+                branch('${GIT_BRANCH}')
+              }
+            }
+            scriptPath('ci/Jenkinsfile.integration')
+            lightweight(true)
+          }
+        }
+      }
+
+  - script: |
+      pipelineJob('drone-e2e') {
+        description('E2E tests pipeline (ci/Jenkinsfile.e2e)')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('${GIT_REPO_URL}') }
+                branch('${GIT_BRANCH}')
+              }
+            }
+            scriptPath('ci/Jenkinsfile.e2e')
+            lightweight(true)
+          }
+        }
+      }
+
+  - script: |
+      pipelineJob('drone-agrodron-security-monitor') {
+        description('Unit tests: systems/agrodron/src/security_monitor/tests (ci/Jenkinsfile.agrodron-security-monitor)')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('${GIT_REPO_URL}') }
+                branch('${GIT_BRANCH}')
+              }
+            }
+            scriptPath('ci/Jenkinsfile.agrodron-security-monitor')
+            lightweight(true)
+          }
+        }
+      }
+
+  - script: |
+      pipelineJob('drone-dummy-fabric-unit') {
+        description('Unit tests: systems/dummy_fabric/tests/test_unit.py (ci/Jenkinsfile.dummy-fabric-unit)')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('${GIT_REPO_URL}') }
+                branch('${GIT_BRANCH}')
+              }
+            }
+            scriptPath('ci/Jenkinsfile.dummy-fabric-unit')
+            lightweight(true)
+          }
+        }
+      }

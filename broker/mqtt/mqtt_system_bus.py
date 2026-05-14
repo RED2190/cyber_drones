@@ -50,12 +50,14 @@ class MQTTSystemBus(SystemBus):
         self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="mqtt_cb")
 
     def _topic_to_mqtt(self, topic: str) -> str:
-        """Топик systems.xxx -> systems/xxx для MQTT."""
-        return topic.replace(".", "/")
+        # Java insurer и Go Agregator подписываются на топики с точками
+        # (systems.insurer, components.agregator.*). В MQTT точка — валидный
+        # символ, а слэш — иерархический разделитель для wildcard. Имена
+        # топиков проекта не иерархические, поэтому пропускаем as-is.
+        return topic
 
     def _mqtt_to_topic(self, mqtt_topic: str) -> str:
-        """MQTT топик systems/xxx -> systems.xxx."""
-        return mqtt_topic.replace("/", ".")
+        return mqtt_topic
 
     def _on_connect(self, client, userdata, flags, rc, *args, **kwargs):
         """Callback подключения к broker, переподписка на топики."""

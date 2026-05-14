@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель Агрегатора</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8 font-sans overflow-x-hidden">
+
+    <div id="notifications-container" class="fixed top-4 right-4 z-50 flex flex-col gap-3 w-85"></div>
+
+    <div class="max-w-4xl mx-auto space-y-6">
+        <h1 class="text-3xl font-bold text-center text-blue-600">Панель Агрегатора</h1>
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4">Регистрация заказчика</h2>
+                <form id="customerForm" class="space-y-3">
+                    <input type="text" id="custName" placeholder="ФИО / Название" class="w-full border p-2 rounded" required>
+                    <input type="email" id="custEmail" placeholder="Email" pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" title="Введите корректный email (например, name@domain.com)" class="w-full border p-2 rounded" required>
+                    <input type="tel" id="custPhone" placeholder="Телефон (+7...)" pattern="^\+?[0-9\s\-\(\)]{10,20}$" title="Номер телефона может содержать от 10 до 20 цифр, а также +, -, скобки и пробелы" class="w-full border p-2 rounded">
+                    <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors duration-300">Создать заказчика</button>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4">Регистрация эксплуатанта</h2>
+                <form id="operatorForm" class="space-y-3">
+                    <input type="text" id="opName" placeholder="Название компании" class="w-full border p-2 rounded" required>
+                    <input type="text" id="opLicense" placeholder="Номер лицензии" class="w-full border p-2 rounded" required>
+                    <input type="email" id="opEmail" placeholder="Email" pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" title="Введите корректный email (например, name@domain.com)" class="w-full border p-2 rounded" required>
+                    <button type="submit" class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 transition-colors duration-300">Создать эксплуатанта</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Создать новый заказ</h2>
+            <form id="orderForm" class="grid grid-cols-2 gap-4">
+                <input type="text" id="orderCustomerId" placeholder="ID Заказчика (UUID)" class="w-full border p-2 rounded col-span-2" required>
+                <input type="text" id="orderDesc" placeholder="Описание груза" class="w-full border p-2 rounded col-span-2" required>
+                <input type="number" id="orderBudget" placeholder="Бюджет (руб.)" class="w-full border p-2 rounded" required>
+                <div class="col-span-2 grid grid-cols-4 gap-2">
+                    <input type="number" step="0.0001" id="fromLat" placeholder="Откуда Широта" value="55.75" class="border p-2 rounded" required>
+                    <input type="number" step="0.0001" id="fromLon" placeholder="Откуда Долгота" value="37.61" class="border p-2 rounded" required>
+                    <input type="number" step="0.0001" id="toLat" placeholder="Куда Широта" value="55.80" class="border p-2 rounded" required>
+                    <input type="number" step="0.0001" id="toLon" placeholder="Куда Долгота" value="37.65" class="border p-2 rounded" required>
+                </div>
+                <button type="submit" class="w-full bg-purple-500 text-white p-2 rounded hover:bg-purple-600 col-span-2 transition-colors duration-300">Создать заказ</button>
+            </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Список заказов</h2>
+                <button id="refreshOrdersBtn" class="bg-gray-200 px-4 py-2 rounded shadow hover:bg-gray-300 transition-colors duration-300">Обновить</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 uppercase text-xs leading-normal">
+                            <th class="border p-2">ID</th>
+                            <th class="border p-2">Описание</th>
+                            <th class="border p-2">Бюджет</th>
+                            <th class="border p-2">Статус</th>
+                            <th class="border p-2">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody" class="text-sm">
+                        <!-- Сюда JS вставит заказы -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+
+        window.showNotification = function({ title, message, type = 'success', duration = 4000 }) {
+            const container = document.getElementById('notifications-container');
+            const id = 'notif-' + Date.now();
+            
+            const colorMap = { 'success': 'bg-green-500', 'error': 'bg-red-500', 'info': 'bg-blue-500' };
+            const colorCls = colorMap[type] || colorMap['info'];
+
+            const notif = document.createElement('div');
+            notif.className = 'relative bg-white shadow-lg rounded-md border border-gray-100 p-4 pb-5 overflow-hidden transition-all duration-300 transform translate-x-full opacity-0';
+            notif.id = id;
+
+            notif.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-800">${title}</h4>
+                        <div class="text-xs text-gray-500 mt-1 break-all">${message}</div>
+                    </div>
+                    <button class="text-gray-400 hover:text-gray-600 ml-4 focus:outline-none" onclick="closeNotification('${id}')">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="absolute bottom-0 left-0 h-1 ${colorCls}" style="width: 100%; transition: width ${duration}ms linear;" id="progress-${id}"></div>
+            `;
+
+            container.appendChild(notif);
+
+            requestAnimationFrame(() => {
+                notif.classList.remove('translate-x-full', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                const progress = notif.querySelector('#progress-' + id);
+                if (progress) progress.style.width = '0%';
+            }, 50);
+
+            notif.dataset.timeout = setTimeout(() => closeNotification(id), duration);
+        };
+
+        window.closeNotification = function(id) {
+            const notif = document.getElementById(id);
+            if (!notif) return;
+            notif.classList.add('translate-x-full', 'opacity-0');
+            setTimeout(() => notif.remove(), 300);
+        };
+
+        document.addEventListener('invalid', function(e) {
+            e.preventDefault();
+
+            let message = 'Пожалуйста, заполните поле корректно.';
+            if (e.target.validity.valueMissing) {
+                message = 'Заполните обязательное поле: ' + (e.target.placeholder || e.target.name || 'без названия');
+            } else if (e.target.type === 'email' && e.target.validity.patternMismatch) {
+                message = 'Введите корректный email (например, user@mail.ru)';
+            } else if (e.target.type === 'tel' && e.target.validity.patternMismatch) {
+                message = 'Введите корректный номер телефона (допускаются цифры, пробелы и +-())';
+            } else if (e.target.type === 'email' && e.target.validity.typeMismatch) {
+                message = 'Введенное значение не похоже на email-адрес.';
+            }
+
+            if (!window.hasInvalidNotification) {
+                window.hasInvalidNotification = true;
+                showNotification({ title: 'Ошибка проверки', message: message, type: 'error' });
+                setTimeout(() => window.hasInvalidNotification = false, 500);
+                
+                e.target.focus();
+            }
+        }, true);
+
+        // API CALL
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const config = { method, headers: { 'Content-Type': 'application/json' } };
+            if (body) config.body = JSON.stringify(body);
+            
+            try {
+                const response = await fetch(API_URL + endpoint, config);
+                return await response.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                showNotification({ title: 'Ошибка', message: 'Ошибка связи с сервером!', type: 'error' });
+            }
+        }
+
+        // 1. Создание заказчика
+        document.getElementById('customerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('custName').value,
+                email: document.getElementById('custEmail').value,
+                phone: document.getElementById('custPhone').value
+            };
+            const result = await apiCall('/customers', 'POST', data);
+            
+            showNotification({ title: 'Заказчик создан', message: `Успешно! ID: <br>${result.id}` });
+            
+            document.getElementById('orderCustomerId').value = result.id;
+        });
+
+        // 2. Создание эксплуатанта
+        document.getElementById('operatorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('opName').value,
+                license: document.getElementById('opLicense').value,
+                email: document.getElementById('opEmail').value
+            };
+            const result = await apiCall('/operators', 'POST', data);
+            
+            showNotification({ title: 'Эксплуатант создан', message: `Успешно! ID: <br>${result.id}` });
+        });
+
+        // 3. Создание заказа
+        document.getElementById('orderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                customer_id: document.getElementById('orderCustomerId').value,
+                description: document.getElementById('orderDesc').value,
+                budget: parseFloat(document.getElementById('orderBudget').value),
+                from_lat: parseFloat(document.getElementById('fromLat').value),
+                from_lon: parseFloat(document.getElementById('fromLon').value),
+                to_lat: parseFloat(document.getElementById('toLat').value),
+                to_lon: parseFloat(document.getElementById('toLon').value)
+            };
+            const result = await apiCall('/orders', 'POST', data);
+            
+            showNotification({ title: 'Заказ успешно отправлен', message: `ID: ${result.id}` });
+            
+            loadOrders(); // Обновляем таблицу
+        });
+
+        // 4. Загрузка и отображение заказов
+        async function loadOrders() {
+            const tbody = document.getElementById('ordersTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">Загрузка...</td></tr>';
+            
+            const orders = await apiCall('/orders');
+            tbody.innerHTML = '';
+            
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">Нет заказов</td></tr>';
+                return;
+            }
+
+            orders.forEach(order => {
+                const tr = document.createElement('tr');
+                
+                let statusBadge = '';
+                if (order.status === 'pending') statusBadge = '<span class="bg-gray-200 text-gray-700 px-2 py-1 rounded">Ожидает</span>';
+                else if (order.status === 'searching') statusBadge = '<span class="bg-orange-200 text-orange-800 px-2 py-1 rounded">Поиск в Kafka</span>';
+                else if (order.status === 'matched') statusBadge = '<span class="bg-blue-200 text-blue-800 px-2 py-1 rounded">Найдено предл.</span>';
+                else if (order.status === 'confirmed') statusBadge = '<span class="bg-indigo-200 text-indigo-800 px-2 py-1 rounded">Подтверждено</span>';
+                else if (order.status === 'completed') statusBadge = '<span class="bg-green-200 text-green-800 px-2 py-1 rounded">Завершено</span>';
+                else if (order.status === 'dispute') statusBadge = '<span class="bg-red-200 text-red-800 px-2 py-1 rounded">Спор</span>';
+
+                // Если статус matched (исполнитель предложил цену), появляется кнопка "Подтвердить"
+                let actionHTML = '-';
+                if (order.status === 'matched') {
+                    actionHTML = `<button onclick="confirmPrice('${order.id}', '${order.operator_id}', ${order.offered_price})" class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600 transition-colors duration-300">Согласиться на ${order.offered_price} руб.</button>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="border p-2 font-mono text-xs max-w-xs truncate" title="${order.id}">${order.id}</td>
+                    <td class="border p-2">${order.description}</td>
+                    <td class="border p-2">${order.budget}</td>
+                    <td class="border p-2">${statusBadge}</td>
+                    <td class="border p-2 text-center">${actionHTML}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 5. Подтверждение цены
+        window.confirmPrice = async function(orderId, operatorId, price) {
+            await apiCall(`/orders/${orderId}/confirm-price`, 'POST', {
+                operator_id: operatorId,
+                accepted_price: price
+            });
+            showNotification({ title: 'Цена подтверждена', message: 'Ожидаем исполнителя!' });
+            loadOrders();
+        }
+
+        // Привязываем кнопку обновления
+        document.getElementById('refreshOrdersBtn').addEventListener('click', loadOrders);
+
+        // Инициализация при загрузке
+        loadOrders();
+    </script>
+</body>
+</html>

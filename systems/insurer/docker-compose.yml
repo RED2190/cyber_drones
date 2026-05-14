@@ -1,0 +1,22 @@
+networks:
+  drones_net:
+    external: true
+    name: ${DOCKER_NETWORK:-drones_net}
+
+services:
+  insurance-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
+    environment:
+      SYSTEM_NAMESPACE: ${SYSTEM_NAMESPACE:-}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_PROFILES_ACTIVE: ${BROKER_TYPE:-kafka}
+      SPRING_DATASOURCE_URL: jdbc:h2:mem:insurancedb
+    networks:
+      - drones_net
+    restart: on-failure

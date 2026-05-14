@@ -20,14 +20,9 @@
 
 ### Как добавить своих пользователей
 
-- **Вариант 1:** Для system-режима задать `BROKER_USER`/`BROKER_PASSWORD` в
-  `systems/<system>/src/<component>/.env` и запустить `make prepare`.
-  Скрипт `scripts/prepare_system.py` сам экспортирует их в `.generated/.env`
-  как `COMPONENT_USER_*` / `COMPONENT_PASSWORD_*` для Kafka JAAS.
-- **Вариант 2:** Задать в `docker/.env` пары `COMPONENT_USER_*` /
-  `COMPONENT_PASSWORD_*` вручную (прямой контроль без `prepare_system`).
-- **Вариант 3:** Использовать одного `ADMIN_USER` для всех сервисов — в compose задать `BROKER_USER=${ADMIN_USER}`, `BROKER_PASSWORD=${ADMIN_PASSWORD}`.
-- **Вариант 4:** Добавить в корневой `docker/docker-compose.yml` в сервис `kafka` новые переменные (например, `MY_USER`, `MY_PASSWORD`) и в `command` дописать строку в JAAS по аналогии с `COMPONENT_USER_A`/`COMPONENT_PASSWORD_A`.
+- **Вариант 1:** Задать в `.env` пары `COMPONENT_USER_*` / `COMPONENT_PASSWORD_*` (сейчас поддерживаются A и B). При старте Kafka они автоматически попадут в JAAS.
+- **Вариант 2:** Использовать одного `ADMIN_USER` для всех сервисов — в compose задать `BROKER_USER=${ADMIN_USER}`, `BROKER_PASSWORD=${ADMIN_PASSWORD}`.
+- **Вариант 3:** Добавить в корневой `docker/docker-compose.yml` в сервис `kafka` новые переменные (например, `MY_USER`, `MY_PASSWORD`) и в `command` дописать строку в JAAS по аналогии с `COMPONENT_USER_A`/`COMPONENT_PASSWORD_A`.
 
 Главное: **логин/пароль в Kafka (в JAAS) и в контейнере приложения (BROKER_USER/BROKER_PASSWORD) должны совпадать** и задаваться в одном и том же `.env`.
 

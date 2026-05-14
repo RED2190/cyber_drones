@@ -1,0 +1,110 @@
+// E2E pipeline: make e2e-codespace
+// Поднимает полный стенд (broker + все системы) без DroneAnalytics и гоняет tests/e2e/test_e2e_scenario.py.
+// Внутри таргета e2e-codespace уже зашиты: submodule update, pip install, подготовка .env,
+// prepare_multi, docker compose up, warmup, pytest, docker compose down.
+pipeline {
+    agent any
+
+    options {
+        timeout(time: 60, unit: 'MINUTES')
+        timestamps()
+        ansiColor('xterm')
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    environment {
+        PIP_DISABLE_PIP_VERSION_CHECK = '1'
+        PIP_BREAK_SYSTEM_PACKAGES = '1'
+        PYTHONDONTWRITEBYTECODE = '1'
+        DOCKER_BUILDKIT = '1'
+        COMPOSE_DOCKER_CLI_BUILD = '1'
+        COMPOSE_PARALLEL_LIMIT = '4'
+        E2E_WARMUP_SECONDS = '180'
+        AGREGATOR_URL = 'http://host.docker.internal:8081'
+        REGULATOR_URL = 'http://host.docker.internal:8088'
+        ANALYTICS_URL = 'http://host.docker.internal:8090'
+        KAFKA_BOOTSTRAP_SERVERS = 'host.docker.internal:9092'
+        KAFKA_ADVERTISED_HOST = 'host.docker.internal'
+    }
+
+    stages {
+        stage('Cleanup workspace') {
+            steps {
+                sh '''
+                    docker run --rm -v "${WORKSPACE}":/ws alpine sh -c '
+                        chown -R 1000:1000 /ws 2>/dev/null || true
+                        rm -rf /ws/config/Pipfile.lock 2>/dev/null || true
+                        find /ws -type d -name .pytest_cache -prune -exec rm -rf {} + 2>/dev/null || true
+                        find /ws -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
+                        rm -rf /ws/.generated 2>/dev/null || true
+                    ' || true
+                '''
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh '''
+                    git config --global --add safe.directory "${WORKSPACE}"
+                    git submodule update --init --recursive
+                '''
+            }
+        }
+
+        stage('Sanity') {
+            steps {
+                sh '''
+                    set -eu
+                    docker version
+                    docker compose version
+                    python3 --version
+                    pip3 --version || python3 -m ensurepip --upgrade
+                '''
+            }
+        }
+
+        stage('Pre-clean') {
+            steps {
+                sh '''
+                    set +e
+                    make e2e-down || true
+                    docker network rm drones_net 2>/dev/null || true
+                    docker builder prune -af || true
+                '''
+            }
+        }
+
+        stage('E2E (codespace)') {
+            steps {
+                sh '''
+                    set -eu
+                    make e2e-codespace
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            sh '''
+                set +e
+                docker compose -f .generated/e2e/docker-compose.yml --env-file .generated/e2e/.env logs --no-color > e2e-logs.txt 2>&1 || true
+                make e2e-down || true
+                for sys in systems/*/; do
+                    [ -f "$sys/Makefile" ] && make -C "$sys" docker-down PROJECT_ROOT="$(pwd)" 2>/dev/null || true
+                done
+                docker run --rm -v "${WORKSPACE}":/ws alpine sh -c 'chown -R 1000:1000 /ws' 2>/dev/null || true
+            '''
+            archiveArtifacts artifacts: 'e2e-logs.txt, .generated/e2e/**, **/pytest-report*.xml', allowEmptyArchive: true
+        }
+        failure {
+            sh '''
+                set +e
+                docker ps -a || true
+                docker compose -f .generated/e2e/docker-compose.yml --env-file .generated/e2e/.env ps || true
+            '''
+        }
+    }
+}

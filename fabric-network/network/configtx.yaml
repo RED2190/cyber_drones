@@ -1,0 +1,274 @@
+# Hyperledger Fabric Channel Configuration
+# Drone Fleet Management System
+
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: crypto-config/ordererOrganizations/drone-network.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+    OrdererEndpoints:
+      - orderer.drone-network.local:7050
+
+  - &Aggregator
+    Name: AggregatorMSP
+    ID: AggregatorMSP
+    MSPDir: crypto-config/peerOrganizations/aggregator.drone-network.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('AggregatorMSP.admin', 'AggregatorMSP.peer', 'AggregatorMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('AggregatorMSP.admin', 'AggregatorMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('AggregatorMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('AggregatorMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.aggregator.drone-network.local
+        Port: 7051
+
+  - &Operator
+    Name: OperatorMSP
+    ID: OperatorMSP
+    MSPDir: crypto-config/peerOrganizations/operator.drone-network.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OperatorMSP.admin', 'OperatorMSP.peer', 'OperatorMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OperatorMSP.admin', 'OperatorMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OperatorMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('OperatorMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.operator.drone-network.local
+        Port: 8051
+
+  - &Insurer
+    Name: InsurerMSP
+    ID: InsurerMSP
+    MSPDir: crypto-config/peerOrganizations/insurer.drone-network.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('InsurerMSP.admin', 'InsurerMSP.peer', 'InsurerMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('InsurerMSP.admin', 'InsurerMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('InsurerMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('InsurerMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.insurer.drone-network.local
+        Port: 9051
+
+  - &CertCenter
+    Name: CertCenterMSP
+    ID: CertCenterMSP
+    MSPDir: crypto-config/peerOrganizations/certcenter.drone-network.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('CertCenterMSP.admin', 'CertCenterMSP.peer', 'CertCenterMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('CertCenterMSP.admin', 'CertCenterMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('CertCenterMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('CertCenterMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.certcenter.drone-network.local
+        Port: 10051
+
+  - &Manufacturer
+    Name: ManufacturerMSP
+    ID: ManufacturerMSP
+    MSPDir: crypto-config/peerOrganizations/manufacturer.drone-network.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('ManufacturerMSP.admin', 'ManufacturerMSP.peer', 'ManufacturerMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('ManufacturerMSP.admin', 'ManufacturerMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('ManufacturerMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('ManufacturerMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.manufacturer.drone-network.local
+        Port: 11051
+
+  - &Orvd
+    Name: OrvdMSP
+    ID: OrvdMSP
+    MSPDir: crypto-config/peerOrganizations/orvd.drone-network.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrvdMSP.admin', 'OrvdMSP.peer', 'OrvdMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrvdMSP.admin', 'OrvdMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrvdMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('OrvdMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.orvd.drone-network.local
+        Port: 12051
+
+  - &Regulator
+    Name: RegulatorMSP
+    ID: RegulatorMSP
+    MSPDir: crypto-config/peerOrganizations/regulator.drone-network.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('RegulatorMSP.admin', 'RegulatorMSP.peer', 'RegulatorMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('RegulatorMSP.admin', 'RegulatorMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('RegulatorMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('RegulatorMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.regulator.drone-network.local
+        Port: 13051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_5: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer.drone-network.local:7050
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  EtcdRaft:
+    Consenters:
+      - Host: orderer.drone-network.local
+        Port: 7050
+        ClientTLSCert: crypto-config/ordererOrganizations/drone-network.local/orderers/orderer.drone-network.local/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/drone-network.local/orderers/orderer.drone-network.local/tls/server.crt
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+  Capabilities:
+    <<: *OrdererCapabilities
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  DroneNetworkGenesis:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *Aggregator
+        - *Operator
+        - *Insurer
+        - *CertCenter
+        - *Manufacturer
+        - *Orvd          
+        - *Regulator     
+
+  DroneChannel:
+    Consortium: DroneConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *Aggregator
+        - *Operator
+        - *Insurer
+        - *CertCenter
+        - *Manufacturer
+        - *Orvd         
+        - *Regulator      

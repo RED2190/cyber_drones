@@ -36,6 +36,9 @@ class Message:
         )
 
 
+DEAD_LETTER_TOPIC = "errors.dead_letters"
+
+
 def create_response(
     correlation_id: str,
     payload: Dict[str, Any],
@@ -55,3 +58,20 @@ def create_response(
     if error:
         response["error"] = error
     return response
+
+
+def create_dead_letter(
+    original_message: Dict[str, Any],
+    sender: str,
+    error: str,
+) -> Dict[str, Any]:
+    """Создаёт сообщение для dead letter topic при ошибке без reply_to."""
+    return {
+        "action": "dead_letter",
+        "sender": sender,
+        "error": error,
+        "original_action": original_message.get("action"),
+        "original_sender": original_message.get("sender"),
+        "original_payload": original_message.get("payload"),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }

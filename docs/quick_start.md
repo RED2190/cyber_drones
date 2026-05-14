@@ -7,11 +7,12 @@
 ```
 broker/              Шина, create_system_bus
 sdk/                 BaseComponent, BaseSystem
-components/          Standalone-компоненты
+components/          Отдельные компоненты
 systems/             Системы (dummy_system)
-docker/              Брокер (kafka, mosquitto)
+docker/              Брокер (kafka, mosquitto), Fabric proxy, Ledger gateway
 scripts/             prepare_system.py
 config/              Pipfile, pyproject.toml
+fabric-network/      Hyperledger Fabric сеть (submodule)
 ```
 
 ## Команды
@@ -29,30 +30,68 @@ cd systems/dummy_system
 make prepare       # Собрать .generated/
 make docker-up    # Брокер + компоненты
 make unit-test
-make integration-test
+make test-all-docker
 ```
+
+**Несколько систем (одна Kafka):**
+```bash
+make prepare-multi SYSTEMS="drone_port gcs"
+docker compose -f .generated/multi/docker-compose.yml --env-file .generated/multi/.env --profile kafka up -d --build
+```
+Скрипт `prepare-multi` собирает единый compose для выбранных систем, включает брокер один раз и падает при конфликте host-портов.
 
 ## Протокол
 
 Сообщения — dict: `action`, `payload`, `sender`, `correlation_id`, `reply_to`.
 
+## Топики
+
+| Шаблон | Назначение | Пример |
+|--------|------------|--------|
+| `systems.<имя_системы>` | Входной топик системы (Gateway) | `systems.flight_system` |
+| `components.<имя_компонента>` | Топик компонента | `components.gps_sensor` |
+| `errors.dead_letters` | Ошибки fire-and-forget | — |
+
+### SYSTEM_NAMESPACE — изоляция экземпляров
+
+Если на одном брокере работают несколько экземпляров одной системы
+(например, два `flight_system` с одинаковыми компонентами), топики совпадут.
+
+Чтобы этого избежать, задайте переменную окружения `SYSTEM_NAMESPACE`.
+Она автоматически добавляет префикс ко всем топикам:
+
+| `SYSTEM_NAMESPACE` | Итоговый топик системы | Итоговый топик компонента |
+|--------------------|------------------------|---------------------------|
+| *(не задан)* | `systems.flight_system` | `components.gps_sensor` |
+| `fleet_1` | `fleet_1.systems.flight_system` | `fleet_1.components.gps_sensor` |
+| `fleet_2` | `fleet_2.systems.flight_system` | `fleet_2.components.gps_sensor` |
+
+В `docker-compose.yml` или `.env` системы:
+
+```yaml
+environment:
+  - SYSTEM_NAMESPACE=fleet_1
+```
+
+Если `SYSTEM_NAMESPACE` не задан — топики без префикса, всё работает как раньше.
+
+### Межсистемное взаимодействие
+
+Внешняя система отправляет запрос на топик `systems.<имя_системы>`,
+не зная внутренних компонентов. Gateway (`BaseGateway`) по таблице
+`ACTION_ROUTING` маршрутизирует запрос к нужному компоненту
+и возвращает ответ отправителю.
+
+> **Dead Letter Topic.**
+> Если сообщение пришло без `reply_to` (fire-and-forget) и обработка
+> завершилась ошибкой или action не найден, оно отправляется
+> в `errors.dead_letters`. При наличии `reply_to` ошибка возвращается
+> отправителю как обычный ответ.
+
 ## Свой компонент/система
 
 - **Компонент:** `components/README.MD`
 - **Система:** `systems/README.md`
-- **Монитор безопасности:** `components/security_monitor/README.md` (Quick Start, policy actions, форматы policy)
-
-## Правило доступа компонентов
-
-**Остальные компоненты (все кроме монитора) принимают запросы только от монитора.**  
-Входящие сообщения от любого другого sender должны игнорироваться (handler возвращает `None`). Монитор проксирует запросы от своего имени, поэтому целевой компонент видит `sender=security_monitor` и обрабатывает запрос.
-
-Базовый поток:
-
-1. Клиент отправляет запрос в `components.security_monitor`
-2. Monitor проверяет policy
-3. Monitor проксирует запрос к целевому компоненту от своего sender
-4. Целевой компонент принимает сообщение только от monitor
 
 ## Docker
 
@@ -68,7 +107,22 @@ make docker-up
 | ADMIN_USER, ADMIN_PASSWORD | Админ брокера |
 | COMPONENT_USER_A/B | Опционально, для компонентов |
 
+## Fabric Ledger (смарт-контракты)
+
+При `ENABLE_FABRIC=true` поднимаются `fabric-proxy` и `ledger-gateway`.
+Компоненты вызывают контракты через `bus.request("components.ledger", ...)`.
+
+Подробнее: [docs/smart_contracts.md](smart_contracts.md)
+
+## Тесты 
+- make e2e-local/e2e-codespace (Запуск e2e тестов одной командой сразу включая клонирование репозиториев и установку зависимостей с ELK/без ELK)
+
+- make ci-unit-test Запускает все unit тесты систем
+
+- make ci-integration-test Запускает все интеграционные тесты систем (ищет в Makefile)
+
 ## Troubleshooting
 
 - Брокер недоступен: проверьте profile (kafka/mqtt) в docker-up
 - Внутри Docker: имена контейнеров (kafka, mosquitto), не localhost
+- Fabric: сеть должна быть запущена до `make docker-up`

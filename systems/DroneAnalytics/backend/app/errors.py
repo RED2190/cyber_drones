@@ -1,0 +1,30 @@
+from fastapi import HTTPException, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+
+def auth_error(message: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail={"code": 401, "message": message},
+    )
+
+
+def register_exception_handlers(app) -> None:
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse:
+        detail = exc.detail
+        if isinstance(detail, dict) and "code" in detail and "message" in detail:
+            code = int(detail["code"])
+            message = str(detail["message"])
+        else:
+            code = exc.status_code
+            message = str(detail)
+        return JSONResponse(status_code=exc.status_code, content={"code": code, "message": message})
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"code": status.HTTP_400_BAD_REQUEST, "message": str(exc.errors())},
+        )

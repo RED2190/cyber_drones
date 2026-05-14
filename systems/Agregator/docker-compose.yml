@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: aggregator
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: aggregator
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aggregator"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - drones_net
+
+  aggregator:
+    build:
+      context: .
+    profiles: ["kafka"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+    environment:
+      KAFKA_BROKER: kafka:29092
+      BROKER_USER: ${BROKER_USER:-${ADMIN_USER:-admin}}
+      BROKER_PASSWORD: ${BROKER_PASSWORD:-${ADMIN_PASSWORD:-admin_secret_123}}
+      KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
+      SYSTEM_NAMESPACE: ${SYSTEM_NAMESPACE:-}
+      DATABASE_URL: postgres://aggregator:secret@postgres:5432/aggregator?sslmode=disable
+      MIGRATIONS_PATH: /migrations/001_init.sql
+    restart: on-failure
+    networks:
+      - drones_net
+
+volumes:
+  postgres_data:
+
+networks:
+  drones_net:
+    external: true
+    name: ${DOCKER_NETWORK:-drones_net}

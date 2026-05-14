@@ -77,10 +77,13 @@ class KafkaSystemBus(SystemBus):
         if self._started:
             return
         self._init_producer()
-        try:
-            self._producer.send(self._reply_topic, {"_init": True}).get(timeout=10)
-        except Exception:
-            pass
+        for attempt in range(3):
+            try:
+                self._producer.send(self._reply_topic, {"_init": True}).get(timeout=10)
+                break
+            except Exception as e:
+                print(f"Reply topic init attempt {attempt+1}/3 failed: {e}")
+                time.sleep(2.0)
         self._producer.flush()
         time.sleep(1.0)
         self.subscribe(self._reply_topic, self._handle_reply)
@@ -162,7 +165,7 @@ class KafkaSystemBus(SystemBus):
         try:
             is_reply_topic = topic.startswith("replies.")
             group_suffix = str(uuid4())[:8] if is_reply_topic else "v1"
-            
+
             config = {
                 'bootstrap_servers': self.bootstrap_servers,
                 'client_id': f"{self.client_id}_{topic.replace('.', '_')}",
