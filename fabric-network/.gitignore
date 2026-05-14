@@ -1,0 +1,47 @@
+# Hyperledger Fabric binaries (downloaded by install-fabric.sh)
+bin/
+network/bin/
+
+# External builders
+builders/
+network/builders/
+
+# Fabric config files (downloaded with binaries)
+config/
+network/config/
+
+# Generated crypto materials (cryptogen)
+network/crypto-config/
+
+# Generated channel artifacts (configtxgen)
+network/channel-artifacts/
+
+# Packaged chaincode
+*.tar.gz
+
+# Go vendor directory
+vendor/
+chaincode/vendor/
+
+# Go build cache
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker volumes data (if any)
+data/

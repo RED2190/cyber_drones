@@ -1,0 +1,32 @@
+"""Gateway для внешнего взаимодействия с GCS."""
+
+from typing import Optional
+
+from broker.system_bus import SystemBus
+from sdk.base_gateway import BaseGateway
+
+from ..topics import ComponentTopics, GatewayActions, SystemTopics
+
+
+class GCSGateway(BaseGateway):
+    ACTION_ROUTING = {
+        GatewayActions.TASK_SUBMIT: ComponentTopics.ORCHESTRATOR,
+        GatewayActions.TASK_ASSIGN: ComponentTopics.ORCHESTRATOR,
+        GatewayActions.TASK_START: ComponentTopics.ORCHESTRATOR,
+    }
+
+    PROXY_TIMEOUT = 10.0
+
+    def __init__(
+        self,
+        system_id: str,
+        bus: SystemBus,
+        health_port: Optional[int] = None,
+    ):
+        super().__init__(
+            system_id=system_id,
+            system_type="gcs",
+            topic=SystemTopics.GCS,
+            bus=bus,
+            health_port=health_port,
+        )

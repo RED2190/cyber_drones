@@ -1,0 +1,77 @@
+spring:
+  application:
+    name: insurance-microservice
+
+  profiles:
+    active: "mqtt"
+
+  logging:
+    level:
+      org.springframework.kafka: DEBUG
+      org.springframework.kafka.listener: DEBUG
+      org.apache.kafka.clients.consumer: DEBUG
+      org.apache.kafka.clients: DEBUG
+      com.insurance: DEBUG
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    admin:
+      auto-create: true
+      properties:
+        create.timeout.ms: 60000
+    consumer:
+      group-id: ${spring.application.name}-${system.namespace:default}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.insurance.model"
+        spring.json.value.default.type: "com.insurance.model.MessageRequest"
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: "com.insurance.model.MessageResponse"
+
+  # Database Configuration (H2 for development)
+  datasource:
+    url: jdbc:h2:mem:insurancedb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+system:
+  namespace: ${SYSTEM_NAMESPACE:}
+
+# Server Configuration
+server:
+  port: 8082
+
+# Insurance specific properties
+insurance:
+  base-cost: 1000
+  policy-duration-days: 30
+  base-kbm: 1.0
+
+# Logging
+logging:
+  level:
+    com.insurance: DEBUG
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG

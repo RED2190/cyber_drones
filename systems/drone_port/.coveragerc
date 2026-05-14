@@ -1,0 +1,5 @@
+[run]
+omit =
+    */tests/*
+    */topics.py
+    */__main__.py

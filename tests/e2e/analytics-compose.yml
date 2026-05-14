@@ -1,0 +1,70 @@
+# Minimal DroneAnalytics stack for E2E tests.
+# No nginx/TLS/frontend -- just backend + Elasticsearch + init.
+# Intended to be merged with the main E2E compose via `docker compose -f ... -f ...`
+
+services:
+  analytics-elastic:
+    image: elasticsearch:8.17.0
+    container_name: analytics-elastic
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms128m -Xmx128m
+    networks:
+      - drones_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+    restart: unless-stopped
+
+  analytics-init:
+    build:
+      context: ../../systems/DroneAnalytics/init-elastic
+      dockerfile: Dockerfile
+    container_name: analytics-init
+    environment:
+      - ELASTIC_URL=http://analytics-elastic:9200
+    configs:
+      - source: init-elastic
+        target: /etc/init-elastic.yaml
+    networks:
+      - drones_net
+    depends_on:
+      analytics-elastic:
+        condition: service_healthy
+
+  analytics-backend:
+    build:
+      context: ../../systems/DroneAnalytics/backend
+      dockerfile: Dockerfile
+    container_name: analytics-backend
+    ports:
+      - "${ANALYTICS_PORT:-8090}:8080"
+    environment:
+      - ELASTIC_URL=http://analytics-elastic:9200
+      - DRONE_CORS_ORIGINS=*
+    secrets:
+      - backend.yaml
+    networks:
+      - drones_net
+    depends_on:
+      analytics-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+configs:
+  init-elastic:
+    content: |
+      elastic_url: http://analytics-elastic:9200
+
+secrets:
+  backend.yaml:
+    file: ../../tests/e2e/secrets/backend.yaml
+
+networks:
+  drones_net:
+    external: true
+    name: ${DOCKER_NETWORK:-drones_net}

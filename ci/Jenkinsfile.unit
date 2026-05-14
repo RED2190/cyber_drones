@@ -1,0 +1,73 @@
+// Unit-test pipeline: make ci-unit-test
+// Fast lane: pipenv + pytest в докер-агенте python:3.11, без Docker-in-Docker.
+pipeline {
+    agent any
+
+    options {
+        timeout(time: 15, unit: 'MINUTES')
+        timestamps()
+        ansiColor('xterm')
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+
+    environment {
+        PIPENV_PIPFILE = 'config/Pipfile'
+        PIP_DISABLE_PIP_VERSION_CHECK = '1'
+        PYTHONDONTWRITEBYTECODE = '1'
+    }
+
+    stages {
+        stage('Cleanup workspace') {
+            steps {
+                sh '''
+                    docker run --rm -v "${WORKSPACE}":/ws alpine sh -c '
+                        chown -R 1000:1000 /ws 2>/dev/null || true
+                        rm -rf /ws/config/Pipfile.lock 2>/dev/null || true
+                        find /ws -type d -name .pytest_cache -prune -exec rm -rf {} + 2>/dev/null || true
+                        find /ws -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
+                    ' || true
+                '''
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh '''
+                    git config --global --add safe.directory "${WORKSPACE}"
+                    git submodule update --init --recursive
+                '''
+            }
+        }
+
+        stage('Unit Tests') {
+            agent {
+                docker {
+                    image 'python:3.11'
+                    args '-u root'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    set -eu
+                    if ! command -v pipenv >/dev/null 2>&1; then
+                        python3 -m ensurepip --upgrade || true
+                        python3 -m pip install --user --upgrade pip setuptools wheel
+                        python3 -m pip install --user pipenv
+                    fi
+                    export PATH="$HOME/.local/bin:$PATH"
+                    pipenv install --dev
+                    make ci-unit-test
+                '''
+            }
+            post {
+                always {
+                    sh 'chown -R 1000:1000 . 2>/dev/null || true'
+                    archiveArtifacts artifacts: '**/pytest-report*.xml, **/htmlcov/**', allowEmptyArchive: true
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,178 @@
+[
+  {
+    "certificate_id": "CERT-FIRMWARE-20260412211526-abc123",
+    "issued_at": "2026-04-12 21:15:26.025858",
+    "valid_until": "2027-04-12 21:15:26.025858",
+    "subject_type": "firmware",
+    "subject_id": "abc123",
+    "security_goals": [
+      "FW-SEC-01",
+      "FW-SEC-02",
+      "FW-SEC-05"
+    ],
+    "digital_signature": "d13afe3d639ac4b4153802a77a05815e55bb1d24f25ad7038308b49882c56c2a"
+  },
+  {
+    "certificate_id": "CERT-DRONE-20260412211602-sn-01",
+    "issued_at": "2026-04-12 21:16:02.379971",
+    "valid_until": "2027-04-12 21:16:02.379971",
+    "subject_type": "drone",
+    "subject_id": "sn-01",
+    "security_goals": [
+      "DRONE-INTEGRITY",
+      "DRONE-AUTH"
+    ],
+    "digital_signature": "d76c795f76f11d287b5935716a1df043ba0750105456d8728a0497c8d59f34b4"
+  },
+  {
+    "certificate_id": "CERT-FIRMWARE-20260412213427-a1",
+    "issued_at": "2026-04-12 21:34:27.620819",
+    "valid_until": "2027-04-12 21:34:27.620819",
+    "subject_type": "firmware",
+    "subject_id": "a1",
+    "security_goals": [
+      "FW-SEC-01",
+      "FW-SEC-02",
+      "FW-SEC-05"
+    ],
+    "digital_signature": "591f78c1a29e0ff1528fd2b07cfd05a2cd4c440dab03dfccae964bbecc3b5871"
+  },
+  {
+    "certificate_id": "CERT-DRONE-20260412213503-s1",
+    "issued_at": "2026-04-12 21:35:03.666391",
+    "valid_until": "2027-04-12 21:35:03.666391",
+    "subject_type": "drone",
+    "subject_id": "s1",
+    "security_goals": [
+      "DRONE-INTEGRITY",
+      "DRONE-AUTH"
+    ],
+    "digital_signature": "e9cd2bf305a63ad43ea6a2a5c49a6175faf521107b552dda0e9eb8f83f0c3adf"
+  },
+  {
+    "certificate_id": "CERT-FIRMWARE-20260413161320-qwerty12",
+    "issued_at": "2026-04-13 16:13:20.856173",
+    "valid_until": "2027-04-13 16:13:20.856173",
+    "subject_type": "firmware",
+    "subject_id": "qwerty12",
+    "security_goals": [
+      "FW-SEC-01",
+      "FW-SEC-02",
+      "FW-SEC-05"
+    ],
+    "digital_signature": "e3049ea698dafebba5ec2c6a1acaa83a987d5c015435a5a56f85ccbbe1a1cf6a"
+  },
+  {
+    "certificate_id": "CERT-DRONE-20260413161353-0101",
+    "issued_at": "2026-04-13 16:13:53.375640",
+    "valid_until": "2027-04-13 16:13:53.375640",
+    "subject_type": "drone",
+    "subject_id": "0101",
+    "security_goals": [
+      "DRONE-INTEGRITY",
+      "DRONE-AUTH"
+    ],
+    "digital_signature": "176a06ec8a76a980c0c3eb38bd2f383dcf525ae29bea80639c4d0cb9f6629929"
+  },
+  {
+    "certificate_id": "CERT-FIRMWARE-20260413163617-qwe",
+    "issued_at": "2026-04-13 16:36:17.650180",
+    "valid_until": "2027-04-13 16:36:17.650180",
+    "subject_type": "firmware",
+    "subject_id": "qwe",
+    "security_goals": [
+      "FW-SEC-01",
+      "FW-SEC-02",
+      "FW-SEC-05"
+    ],
+    "digital_signature": "93dcb37e6660912f01eaa5e01a36697ecc1e265d3cdfcc1bfd2b4c43e5938845"
+  },
+  {
+    "certificate_id": "CERT-DRONE-20260413163630-ASDASD",
+    "issued_at": "2026-04-13 16:36:30.838819",
+    "valid_until": "2027-04-13 16:36:30.838819",
+    "subject_type": "drone",
+    "subject_id": "ASDASD",
+    "security_goals": [
+      "DRONE-INTEGRITY",
+      "DRONE-AUTH"
+    ],
+    "digital_signature": "ec9d0a1346b42071d77e82d1c2cff7d05ed684a2a79bdc669938be7d5d6636c3"
+  },
+  {
+    "certificate_id": "CERT-FIRMWARE-20260414071328-qwe",
+    "issued_at": "2026-04-14 07:13:28.406900",
+    "valid_until": "2027-04-14 07:13:28.406900",
+    "subject_type": "firmware",
+    "subject_id": "qwe",
+    "security_goals": [
+      "FW-SEC-01",
+      "FW-SEC-02",
+      "FW-SEC-05"
+    ],
+    "digital_signature": "2982925600ac09267bde8f47bc89a77c4e84c927226fd9218e2b3d870294dc71"
+  },
+  {
+    "certificate_id": "CERT-FIRMWARE-20260415160755-qwerty",
+    "issued_at": "2026-04-15 16:07:55.298756",
+    "valid_until": "2027-04-15 16:07:55.298756",
+    "subject_type": "firmware",
+    "subject_id": "qwerty",
+    "security_goals": [
+      "FW-SEC-01",
+      "FW-SEC-02",
+      "FW-SEC-05"
+    ],
+    "digital_signature": "e31fb696cfe05deced4c5a0f473e52738844ead9c446f9ccf8e8b1191a7bb528"
+  },
+  {
+    "certificate_id": "CERT-FIRMWARE-20260415164534-qwe4",
+    "issued_at": "2026-04-15 16:45:34.621480",
+    "valid_until": "2027-04-15 16:45:34.621480",
+    "subject_type": "firmware",
+    "subject_id": "qwe4",
+    "security_goals": [
+      "FW-SEC-01",
+      "FW-SEC-02",
+      "FW-SEC-05"
+    ],
+    "digital_signature": "fb6d2d463bdb81a36d7db82804bdd896ce8d7a3eb0feb7eec55304815829c579"
+  },
+  {
+    "certificate_id": "CERT-DRONE-20260415164850-q1",
+    "issued_at": "2026-04-15 16:48:50.347402",
+    "valid_until": "2027-04-15 16:48:50.347402",
+    "subject_type": "drone",
+    "subject_id": "q1",
+    "security_goals": [
+      "DRONE-INTEGRITY",
+      "DRONE-AUTH"
+    ],
+    "digital_signature": "2b8d638e4283763f11537503ecbc6402158f1aaeabd92d7c0e30bd748f8942c8"
+  },
+  {
+    "certificate_id": "CERT-FIRMWARE-20260416110014-",
+    "issued_at": "2026-04-16 11:00:14.309046",
+    "valid_until": "2027-04-16 11:00:14.309046",
+    "subject_type": "firmware",
+    "subject_id": "",
+    "security_goals": [
+      "FW-SEC-01",
+      "FW-SEC-02",
+      "FW-SEC-05"
+    ],
+    "digital_signature": "90e1d052fa9dcf5c91147c5f6a7f9d4853adbc2e86ba3a2016663ff2af58c01e"
+  },
+  {
+    "certificate_id": "CERT-DRONE-20260416110034-",
+    "issued_at": "2026-04-16 11:00:34.986082",
+    "valid_until": "2027-04-16 11:00:34.986082",
+    "subject_type": "drone",
+    "subject_id": "",
+    "security_goals": [
+      "DRONE-INTEGRITY",
+      "DRONE-AUTH"
+    ],
+    "digital_signature": "4f7efadedb196e20f5b7084b7a767b98a3b93cee34ed16589d6a3abd52489b1c"
+  }
+]

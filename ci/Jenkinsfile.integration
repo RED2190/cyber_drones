@@ -1,0 +1,98 @@
+// Integration-test pipeline: make ci-integration-test
+// Запускает пер-системные integration-таргеты (каждая система поднимает свой docker compose).
+// Требуется host-agent с доступным docker + docker compose.
+pipeline {
+    agent any
+
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        timestamps()
+        ansiColor('xterm')
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+
+    environment {
+        PIPENV_PIPFILE = 'config/Pipfile'
+        PIP_DISABLE_PIP_VERSION_CHECK = '1'
+        PYTHONDONTWRITEBYTECODE = '1'
+        DOCKER_BUILDKIT = '1'
+        COMPOSE_DOCKER_CLI_BUILD = '1'
+    }
+
+    stages {
+        stage('Cleanup workspace') {
+            steps {
+                sh '''
+                    docker run --rm -v "${WORKSPACE}":/ws alpine sh -c '
+                        chown -R 1000:1000 /ws 2>/dev/null || true
+                        rm -rf /ws/config/Pipfile.lock 2>/dev/null || true
+                        find /ws -type d -name .pytest_cache -prune -exec rm -rf {} + 2>/dev/null || true
+                        find /ws -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
+                    ' || true
+                '''
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh '''
+                    git config --global --add safe.directory "${WORKSPACE}"
+                    git submodule update --init --recursive
+                '''
+            }
+        }
+
+        stage('Sanity') {
+            steps {
+                sh '''
+                    set -eu
+                    docker version
+                    docker compose version
+                    python3 --version
+                '''
+            }
+        }
+
+        stage('Init') {
+            steps {
+                sh '''
+                    set -eu
+                    if ! command -v pipenv >/dev/null 2>&1; then
+                        python3 -m pip install --user --upgrade pip setuptools wheel
+                        python3 -m pip install --user pipenv
+                    fi
+                    export PATH="$HOME/.local/bin:$PATH"
+                    pipenv --version
+                    pipenv install --dev
+                '''
+            }
+        }
+
+        stage('Integration Tests') {
+            steps {
+                sh '''
+                    set -eu
+                    export PATH="$HOME/.local/bin:$PATH"
+                    make ci-integration-test
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            sh '''
+                set +e
+                make docker-down || true
+                for sys in systems/*/; do
+                    [ -f "$sys/Makefile" ] && make -C "$sys" docker-down PROJECT_ROOT="$(pwd)" 2>/dev/null || true
+                done
+                docker system prune -f --volumes --filter "label=ci=drones" || true
+                docker run --rm -v "${WORKSPACE}":/ws alpine sh -c 'chown -R 1000:1000 /ws' 2>/dev/null || true
+            '''
+            archiveArtifacts artifacts: '**/pytest-report*.xml, **/*.log', allowEmptyArchive: true
+        }
+    }
+}

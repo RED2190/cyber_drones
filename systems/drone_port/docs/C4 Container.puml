@@ -1,0 +1,59 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_LEFT_RIGHT()
+
+title Дронопорт — C2 Containers
+
+System_Ext(operator_system, "Эксплуатант", "Внешняя система, отслеживающая статусы дронов")
+System_Ext(drone, "Дрон", "Физический борт")
+System_Ext(sitl, "SITL", "Внешняя среда симуляции, получающая HOME-координаты дрона")
+
+System_Boundary(drone_port, "Дронопорт") {
+  Container(orchestrator, "Orchestrator", "Python service", "Внешняя точка входа для Эксплуатанта")
+  Container(drone_manager, "DroneManager", "Python service", "Обрабатывает запросы дронов на посадку, взлет и зарядку")
+  Container(drone_registry, "DroneRegistry", "Python service", "Хранит состояние дронов и уровень батареи")
+  Container(port_manager, "PortManager", "Python service", "Резервирует и освобождает посадочные слоты")
+  Container(charging_manager, "ChargingManager", "Python service", "Запускает зарядку и обновляет состояние батареи")
+  Container(state_store, "StateStore", "Python service", "Хранит состояние портов в Redis")
+
+  ContainerDb(redis, "Redis", "State storage", "Порты и записи о дронах")
+}
+
+Rel(operator_system, orchestrator, "get_available_drones")
+Rel(orchestrator, drone_registry, "get_available_drones", "request")
+
+Rel(drone, drone_manager, "request_landing / request_takeoff")
+Rel(drone_manager, sitl, "sitl-drone-home (HOME)", "publish")
+
+Rel(drone_manager, port_manager, "request_landing / get_port_status", "request")
+Rel(drone_manager, port_manager, "free_slot", "publish")
+Rel(drone_manager, drone_registry, "register_drone", "publish")
+Rel(drone_manager, drone_registry, "get_drone", "request")
+Rel(drone_manager, charging_manager, "start_charging", "publish")
+
+Rel(charging_manager, drone_registry, "charging_started / update_battery", "publish")
+
+Rel(port_manager, state_store, "get_all_ports", "request")
+Rel(port_manager, state_store, "update_port", "publish")
+Rel(state_store, redis, "Чтение/запись портов")
+Rel(drone_registry, redis, "Чтение/запись дронов")
+
+note right of drone_manager
+  DroneManager:
+  - при посадке резервирует слот через PortManager
+  - после успешной посадки регистрирует дрон в DroneRegistry
+  - при взлете проверяет порт и состояние дрона
+  - после успешного взлета освобождает слот и публикует HOME-координаты в SITL
+  - при зарядке запускает ChargingManager
+end note
+
+note bottom of drone_port
+  Цели безопасности Дронопорта:
+  - ЦБ-1: каждый посадочный порт используется не более чем одним БАС одновременно
+  - ЦБ-2: выполняются только аутентичные и авторизованные команды
+  - ЦБ-3: Дронопорт передает целостную и подлинную критичную информацию
+  - ЦБ-4: для решений об обслуживании используются только подлинные данные самодиагностики БАС
+  Источник: origin/security-analysis, docs/DRONEPORT_SECURITY_ANALYSIS.md
+end note
+
+@enduml

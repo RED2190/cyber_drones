@@ -1,0 +1,7 @@
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+mqtt:
+  server: ${MQTT_SERVER:tcp://mosquitto:1883}
+  username: ${MQTT_USERNAME:}
+  password: ${MQTT_PASSWORD:}

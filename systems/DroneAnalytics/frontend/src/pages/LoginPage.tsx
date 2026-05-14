@@ -1,0 +1,134 @@
+import {useState, useEffect} from "react"
+import {useNavigate} from "react-router-dom"
+
+import OP_logo from "../assets/OP_logo.svg"
+import SPbguLogo from "../assets/spbgu_logo.svg"
+import {RED, BACKEND_URL} from "../config.ts"
+import {checkAuth} from "../components/TokenCheck.ts"
+
+function LoginPage() {
+
+    const navigate = useNavigate()
+
+    const [username, setUsername] = useState("")
+    const [password, setPassword] = useState("")
+    const [error, setError] = useState("")
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setError("")
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/auth/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                const text: string = data.message || ""
+                const matches = [...text.matchAll(/'msg':\s*'([^']+)'/g)]
+                const messages = matches.map(m => m[1])
+                throw new Error(messages.join(", ") || "Ошибка авторизации")
+            }
+
+            const {access_token} = data
+            localStorage.setItem("access_token", access_token)
+            navigate("/event")
+        } catch (err: any) {
+            setError(err.message || "Ошибка соединения с сервером")
+        }
+    }
+
+    useEffect(() => {
+        const check = async () => {
+            const authorized = await checkAuth()
+            if (authorized) {
+                navigate("/event")
+            }
+        }
+
+        check()
+    }, [])
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-white px-4">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
+                <div className="h-1" style={{backgroundColor: RED}}/>
+                <div className="px-10 py-8 flex flex-col gap-4">
+                    <div className="flex items-center justify-center gap-10">
+                        <div className="flex items-center gap-2">
+                            <img src={OP_logo} alt="OP Logo" className="h-9"/>
+                            <span className="text-sm font-semibold tracking-tight leading-none">
+                                <span style={{color: RED}}>OurPaint</span>
+                                 <br/>
+                                 <span className="text-gray-800">Company</span>
+                             </span>
+                        </div>
+                        <div className="h-10 w-[1px] bg-gray-300"/>
+                        <img src={SPbguLogo} alt="SPbGU Logo" className="h-20"/>
+                    </div>
+                    <div className="w-full h-[1px] bg-gray-300 my-1"/>
+                    <div className="text-center">
+                        <h1 className="text-3xl font-extrabold tracking-tight" style={{color: RED}}>
+                            Drone Analytics
+                        </h1>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Система мониторинга и аналитики
+                        </p>
+                    </div>
+                    <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">
+                                Логин
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Введите логин"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none transition"
+                                style={{outlineColor: RED}}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">
+                                Пароль
+                            </label>
+                            <input
+                                type="password"
+                                placeholder="Введите пароль"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none transition"
+                                style={{outlineColor: RED}}
+                            />
+                        </div>
+                        {error && (
+                            <p className="text-red-500 text-sm text-center">
+                                {error}
+                            </p>
+                        )}
+                        <button
+                            type="submit"
+                            className="mt-2 py-3 rounded-lg text-white font-semibold transition shadow-md hover:shadow-lg"
+                            style={{backgroundColor: RED}}
+                        >
+                            Войти
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default LoginPage
